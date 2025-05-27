@@ -48,7 +48,6 @@
             margin: 20px auto;
             animation: fadeIn 0.8s ease-out;
             position: relative;
-            /* Para o modal */
         }
 
         @keyframes fadeIn {
@@ -235,21 +234,17 @@
             border-right: none;
         }
 
-        /* Estilos para o Modal */
         .modal-overlay {
             position: fixed;
-            /* Alterado de absolute para fixed para cobrir a tela toda */
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.6);
             display: none;
-            /* Escondido por padrão */
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            /* Para ficar sobre os outros elementos */
             padding: 15px;
             box-sizing: border-box;
         }
@@ -487,7 +482,6 @@
             const nextTimeSlotElem = document.getElementById('next-time-slot');
             const currentTimeDisplay = document.getElementById('current-time-display');
 
-            // Modal elements
             const alarmModal = document.getElementById('alarmModal');
             const modalEventActivity = document.getElementById('modal-event-activity');
             const modalEventTime = document.getElementById('modal-event-time');
@@ -504,19 +498,12 @@
                 { time: "11:00", activity: "Mesa Redonda: Futuro da IA", location: "Sala 2", alarmTriggered: false },
                 { time: "12:30", activity: "Almoço", location: "Praça de Alimentação", alarmTriggered: false },
                 { time: "14:00", activity: "Apresentação de Projetos", location: "Foyer", alarmTriggered: false },
-                // Adicione um evento para teste de alarme em alguns minutos a partir de agora
-                // Exemplo: se agora são 14:50, adicione um evento para 15:00
-                // { time: "15:00", activity: "TESTE DE ALARME", location: "Auditório Principal", alarmTriggered: false },
                 { time: "15:10", activity: "Palestra: Empreendedorismo Digital", location: "Auditório Principal", alarmTriggered: false },
                 { time: "16:30", activity: "Encerramento e Sorteio de Prêmios", location: "Auditório Principal", alarmTriggered: false },
                 { time: "17:00", activity: "Happy Hour de Despedida", location: "Bar do Evento", alarmTriggered: false }
             ];
 
-            // Crie um objeto de áudio. SUBSTITUA 'URL_DO_SEU_ARQUIVO_DE_SOM.mp3' pelo caminho do seu arquivo de som.
-            // Se você não tiver um arquivo de som local, pode tentar usar um link de um site que permita hotlinking (não recomendado para produção)
-            // ou uma API de Text-to-Speech se precisar de algo mais dinâmico e tiver permissão.
-            // Para um simples teste, você pode omitir o som ou procurar por "beep sound data uri" para um som embutido.
-            const alarmSound = new Audio('alarme.mp3'); // <<< SUBSTITUA AQUI!
+            const alarmSound = new Audio('alarme.mp3');
 
             function renderProgram() {
                 programBody.innerHTML = '';
@@ -537,13 +524,13 @@
                 modalEventTime.textContent = eventItem.time;
                 modalEventLocation.textContent = eventItem.location;
                 alarmModal.style.display = 'flex';
-                alarmSound.play().catch(error => console.error("Erro ao tocar o som:", error)); // Tenta tocar o som
+                alarmSound.play().catch(error => console.error("Erro ao tocar o som:", error));
             }
 
             modalCloseBtn.addEventListener('click', () => {
                 alarmModal.style.display = 'none';
-                alarmSound.pause(); // Para o som se ainda estiver tocando
-                alarmSound.currentTime = 0; // Reseta o som para o início
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
             });
 
             function updateProgramStatus() {
@@ -561,36 +548,34 @@
                 program.forEach((item, index) => {
                     const [itemHour, itemMinute] = item.time.split(':').map(Number);
                     const itemTimeInMinutes = itemHour * 60 + itemMinute;
-                    const alarmTimeInMinutes = itemTimeInMinutes - 10; // 10 minutos antes
+                    const alarmTimeInMinutes = itemTimeInMinutes - 10;
 
-                    // Lógica do Alarme
                     if (!item.alarmTriggered && currentTime >= alarmTimeInMinutes && currentTime < itemTimeInMinutes) {
                         showAlarmModal(item);
-                        item.alarmTriggered = true; // Marcar como disparado para não repetir
+                        item.alarmTriggered = true;
                     }
 
-                    // Lógica para atividade atual e próxima (mantida)
                     if (itemTimeInMinutes <= currentTime && !foundCurrent) {
                         let nextItemTimeInMinutes = Infinity;
-                        // Verifica se o próximo item existe e se tem o mesmo horário (para atividades simultâneas)
+
                         let k = index + 1;
                         while (program[k] && program[k].time === item.time) {
                             k++;
                         }
-                        if (program[k]) { // Usa o próximo evento com horário diferente
+                        if (program[k]) {
                             const [nextItemHour, nextItemMinute] = program[k].time.split(':').map(Number);
                             nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
-                        } else if (program[index + 1]) { // Fallback se não houver eventos com horário diferente
+                        } else if (program[index + 1]) {
                             const [nextItemHour, nextItemMinute] = program[index + 1].time.split(':').map(Number);
                             nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
                         }
 
 
                         if (currentTime < nextItemTimeInMinutes || index === program.length - 1 || (program[index + 1] && program[index + 1].time !== item.time)) {
-                            if (currentTime < itemTimeInMinutes + getDurationOfActivity(item, index)) { // Considera uma duração padrão ou específica
+                            if (currentTime < itemTimeInMinutes + getDurationOfActivity(item, index)) {
                                 currentActivity = item;
                                 document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('active');
-                                foundCurrent = true; // Encontrou a atual, não precisa continuar procurando por "current" se não houver simultâneas com o mesmo status
+                                foundCurrent = true;
                             }
                         }
                     }
@@ -599,14 +584,11 @@
                         nextActivity = item;
                         document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('upcoming');
                     } else if (itemTimeInMinutes > currentTime && nextActivity && item.time === nextActivity.time) {
-                        // Se houver múltiplas atividades "a seguir" no mesmo horário, marca todas como upcoming
                         document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('upcoming');
                     }
 
                 });
 
-
-                // Atualiza cards "Agora" e "A Seguir"
                 if (currentActivity) {
                     currentActivityElem.textContent = currentActivity.activity;
                     currentTimeSlotElem.textContent = `(${currentActivity.time} - ${currentActivity.location})`;
@@ -628,12 +610,9 @@
                     }
                 }
 
-
                 currentTimeDisplay.textContent = `Hora Atual: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             }
 
-            // Função auxiliar para determinar a "duração" de uma atividade para a lógica de "atual"
-            // Isso é um pouco complexo sem durações explícitas, então vamos assumir que dura até o próximo evento.
             function getDurationOfActivity(item, index) {
                 if (program[index + 1]) {
                     const [itemHour, itemMinute] = item.time.split(':').map(Number);
@@ -642,13 +621,12 @@
                     const nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
                     return nextItemTimeInMinutes - itemTimeInMinutes;
                 }
-                return 60; // Assume 1 hora se for o último evento
+                return 60;
             }
 
-
             renderProgram();
-            setInterval(updateProgramStatus, 1000); // Verifica a cada segundo
-            updateProgramStatus(); // Chamada inicial
+            setInterval(updateProgramStatus, 1000);
+            updateProgramStatus();
         });
     </script>
 </body>

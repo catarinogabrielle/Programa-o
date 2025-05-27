@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programação do Evento</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary-color: #6a0572;
+            --secondary-color: #ab47bc;
+            --accent-color-current: #00c853;
+            --accent-color-next: #ffab00;
+            --text-dark: #333333;
+            --text-light: #f8f8f8;
+            --bg-light: #ffffff;
+            --bg-gradient-start: #e0f2f7;
+            --bg-gradient-end: #c5e1a5;
+            --shadow-light: rgba(0, 0, 0, 0.08);
+            --shadow-heavy: rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0px;
+            padding: 0px;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background-color: var(--bg-light);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0px 15px 30px var(--shadow-heavy);
+            width: 90%;
+            max-width: 900px;
+            margin: 20px auto;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0px);
+            }
+        }
+
+        h1,
+        h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        h1 {
+            font-size: 45px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            font-size: 32px;
+            margin-top: 35px;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background-color: var(--secondary-color);
+            margin: 10px auto 0px auto;
+            border-radius: 2px;
+        }
+
+        #current-time-display {
+            text-align: center;
+            font-size: 26px;
+            margin: 0px auto 35px auto;
+            font-weight: 600;
+            color: var(--secondary-color);
+            background-color: #f0f8ff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: block;
+            max-width: fit-content;
+            box-shadow: 0px 2px 5px var(--shadow-light);
+        }
+
+        #now-next {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            background-color: var(--bg-light);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 6px 15px var(--shadow-light);
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+            pointer-events: none;
+            transition: opacity 0.3s ease-out;
+            opacity: 0;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0px 10px 25px var(--shadow-heavy);
+        }
+
+        .card.current {
+            border-left: 6px solid var(--accent-color-current);
+            background-color: #f0fff0;
+        }
+
+        .card.next {
+            border-left: 6px solid var(--accent-color-next);
+            background-color: #fffaf0;
+        }
+
+        .card h2 {
+            margin-top: 0px;
+            color: var(--primary-color);
+            font-size: 26px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .card p {
+            margin: 8px 0px;
+            font-size: 18px;
+            color: #555555;
+            line-height: 24px;
+        }
+
+        #program-list table {
+            width: 100%;
+            border-collapse: separate;
+            margin-top: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 5px 15px var(--shadow-light);
+        }
+
+        #program-list th,
+        #program-list td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: none;
+        }
+
+        #program-list thead {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-light);
+        }
+
+        #program-list th {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        #program-list tbody tr {
+            background-color: var(--bg-light);
+            transition: all 0.3s ease-in-out;
+            border-radius: 8px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        #program-list tbody tr:hover {
+            transform: translateX(5px);
+            box-shadow: 0px 5px 15px var(--shadow-heavy);
+            background-color: #f5f5f5;
+        }
+
+        #program-list tr.active {
+            background-color: #e6ffed;
+            font-weight: 600;
+            color: var(--accent-color-current);
+            border-left: 4px solid var(--accent-color-current);
+        }
+
+        #program-list tr.upcoming {
+            background-color: #fffde7;
+            font-weight: 600;
+            color: var(--accent-color-next);
+            border-left: 4px solid var(--accent-color-next);
+        }
+
+        #program-list td:last-child {
+            border-right: none;
+        }
+
+        #program-list th:last-child {
+            border-right: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+                align-items: flex-start;
+            }
+
+            .container {
+                padding: 25px;
+                border-radius: 10px;
+                box-shadow: 0px 10px 20px var(--shadow-heavy);
+                margin: 15px auto;
+            }
+
+            h1 {
+                font-size: 35px;
+                margin-bottom: 20px;
+            }
+
+            h2 {
+                font-size: 27px;
+                margin-top: 25px;
+                margin-bottom: 15px;
+            }
+
+            h2::after {
+                width: 40px;
+                height: 2px;
+            }
+
+            #current-time-display {
+                font-size: 22px;
+                margin-bottom: 25px;
+                padding: 8px 15px;
+            }
+
+            #now-next {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin-bottom: 40px;
+            }
+
+            .card {
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px var(--shadow-light);
+            }
+
+            .card h2 {
+                font-size: 22px;
+            }
+
+            .card p {
+                font-size: 16px;
+            }
+
+            #program-list table {
+                border-spacing: 0px 5px;
+                border-radius: 8px;
+            }
+
+            #program-list th,
+            #program-list td {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 29px;
+            }
+
+            h2 {
+                font-size: 22px;
+            }
+
+            #current-time-display {
+                font-size: 18px;
+            }
+
+            #program-list th,
+            #program-list td {
+                padding: 10px;
+                font-size: 13px;
+
+                &:last-child {
+                    display: none;
+                }
+            }
+
+            #program-list th:last-child {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Programação do Evento</h1>
+        <div id="current-time-display"></div>
+        <div id="now-next">
+            <div class="card current">
+                <h2>Agora:</h2>
+                <p id="current-activity">Carregando...</p>
+                <p id="current-time-slot"></p>
+            </div>
+            <div class="card next">
+                <h2>A Seguir:</h2>
+                <p id="next-activity">Carregando...</p>
+                <p id="next-time-slot"></p>
+            </div>
+        </div>
+        <div id="program-list">
+            <h2>Programação Completa</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Horário</th>
+                        <th>Atividade</th>
+                        <th>Local</th>
+                    </tr>
+                </thead>
+                <tbody id="program-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const programBody = document.getElementById('program-body');
+            const currentActivityElem = document.getElementById('current-activity');
+            const currentTimeSlotElem = document.getElementById('current-time-slot');
+            const nextActivityElem = document.getElementById('next-activity');
+            const nextTimeSlotElem = document.getElementById('next-time-slot');
+            const currentTimeDisplay = document.getElementById('current-time-display');
+
+            // **IMPORTANTE:** Adapte esta array com a sua programação real.
+            // Os horários devem estar em formato de string "HH:MM".
+            const program = [
+                { time: "09:00", activity: "Abertura do Evento e Boas-Vindas", location: "Auditório Principal" },
+                { time: "09:30", activity: "Palestra: Inovação e Tecnologia", location: "Auditório Principal" },
+                { time: "10:30", activity: "Coffee Break e Networking", location: "Área de Convivência" },
+                { time: "11:00", activity: "Workshop: Desenvolvimento Web Moderno", location: "Sala 1" },
+                { time: "11:00", activity: "Mesa Redonda: Futuro da IA", location: "Sala 2" }, // Atividades simultâneas
+                { time: "12:30", activity: "Almoço", location: "Praça de Alimentação" },
+                { time: "14:00", activity: "Apresentação de Projetos", location: "Foyer" },
+                { time: "15:30", activity: "Palestra: Empreendedorismo Digital", location: "Auditório Principal" },
+                { time: "16:30", activity: "Encerramento e Sorteio de Prêmios", location: "Auditório Principal" },
+                { time: "17:00", activity: "Happy Hour de Despedida", location: "Bar do Evento" }
+            ];
+
+            function renderProgram() {
+                programBody.innerHTML = '';
+                program.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>${item.time}</td>
+                <td>${item.activity}</td>
+                <td>${item.location}</td>
+            `;
+                    row.dataset.index = index;
+                    programBody.appendChild(row);
+                });
+            }
+
+            function updateProgramStatus() {
+                const now = new Date();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+
+                let currentActivity = null;
+                let nextActivity = null;
+                let foundCurrent = false;
+
+                document.querySelectorAll('#program-body tr').forEach(row => {
+                    row.classList.remove('active', 'upcoming');
+                });
+
+                program.forEach((item, index) => {
+                    const [itemHour, itemMinute] = item.time.split(':').map(Number);
+                    const itemTimeInMinutes = itemHour * 60 + itemMinute;
+
+                    if (itemTimeInMinutes <= currentTime && !foundCurrent) {
+                        let nextItemTimeInMinutes = Infinity;
+                        if (program[index + 1]) {
+                            const [nextItemHour, nextItemMinute] = program[index + 1].time.split(':').map(Number);
+                            nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
+                        }
+
+                        if (currentTime < nextItemTimeInMinutes) {
+                            currentActivity = item;
+                            document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('active');
+                            foundCurrent = true;
+                        }
+                    }
+
+                    if (itemTimeInMinutes > currentTime && !nextActivity) {
+                        nextActivity = item;
+                        document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('upcoming');
+                    }
+                });
+
+                if (currentActivity) {
+                    currentActivityElem.textContent = currentActivity.activity;
+                    currentTimeSlotElem.textContent = `(${currentActivity.time} - ${currentActivity.location})`;
+                } else {
+                    currentActivityElem.textContent = "Nenhuma atividade no momento.";
+                    currentTimeSlotElem.textContent = "";
+                }
+
+                if (nextActivity) {
+                    nextActivityElem.textContent = nextActivity.activity;
+                    nextTimeSlotElem.textContent = `(${nextActivity.time} - ${nextActivity.location})`;
+                } else {
+                    nextActivityElem.textContent = "Fim da programação ou aguardando próxima atualização.";
+                    nextTimeSlotElem.textContent = "";
+                }
+
+                currentTimeDisplay.textContent = `Hora Atual: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+            }
+
+            renderProgram();
+
+            setInterval(updateProgramStatus, 1000);
+
+            updateProgramStatus();
+        });
+    </script>
+</body>
+
+</html>

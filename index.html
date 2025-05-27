@@ -53,15 +53,22 @@
             overflow: hidden;
         }
 
+        /* Estilos para o cabeçalho com a logo */
         .header-logo {
             text-align: center;
+            margin-bottom: 30px;
+            /* Espaço abaixo da logo e antes do h1 */
         }
 
         .header-logo img {
             max-width: 250px;
+            /* Define a largura máxima da logo */
             height: auto;
+            /* Mantém a proporção da imagem */
             margin-bottom: 10px;
+            /* Espaço abaixo da logo */
             filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.486));
+            /* Sua sombra original */
         }
 
 
@@ -90,6 +97,7 @@
             font-size: 45px;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
             margin-top: 0;
+            /* Removendo margem superior padrão para não empurrar a logo */
         }
 
         h2 {
@@ -336,8 +344,10 @@
                 margin: 15px auto;
             }
 
+            /* Ajuste da logo para mobile */
             .header-logo img {
                 max-width: 180px;
+                /* Reduz o tamanho da logo em telas menores */
             }
 
             h1 {
@@ -412,8 +422,10 @@
                 padding: 15px;
             }
 
+            /* Mais ajustes para a logo em telas muito pequenas */
             .header-logo img {
                 max-width: 150px;
+                /* Reduz ainda mais para telas menores */
             }
 
             h1 {
@@ -527,11 +539,11 @@
                 { time: "12:30", activity: "Almoço", location: "Praça de Alimentação", alarmTriggered: false },
                 { time: "14:00", activity: "Apresentação de Projetos", location: "Foyer", alarmTriggered: false },
                 { time: "15:10", activity: "Palestra: Empreendedorismo Digital", location: "Auditório Principal", alarmTriggered: false },
-                { time: "16:15", activity: "Encerramento e Sorteio de Prêmios", location: "Auditório Principal", alarmTriggered: false },
+                { time: "16:20", activity: "Encerramento e Sorteio de Prêmios", location: "Auditório Principal", alarmTriggered: false },
                 { time: "17:00", activity: "Happy Hour de Despedida", location: "Bar do Evento", alarmTriggered: false }
             ];
 
-            const alarmSound = new Audio('alarme.mp3');
+            const alarmSound = new Audio('alarme.mp3'); // Certifique-se que 'alarme.mp3' está no caminho correto
 
             function renderProgram() {
                 programBody.innerHTML = '';
@@ -552,18 +564,33 @@
                 modalEventTime.textContent = eventItem.time;
                 modalEventLocation.textContent = eventItem.location;
                 alarmModal.style.display = 'flex';
-                alarmSound.play().catch(error => console.error("Erro ao tocar o som:", error));
+
+                // Tenta tocar o áudio e captura qualquer erro (como bloqueio do navegador)
+                alarmSound.play()
+                    .then(() => {
+                        console.log(`Alarme tocando para: ${eventItem.activity}`);
+                    })
+                    .catch(error => {
+                        console.error("Erro ao tocar o som do alarme:", error);
+                        console.warn("Possível causa: O navegador bloqueou a reprodução automática de áudio. É necessário uma interação do usuário com a página antes do áudio poder ser reproduzido.");
+                        // Você pode adicionar um elemento na modal para avisar o usuário, se desejar
+                        // Ex: const audioWarning = document.createElement('p');
+                        //     audioWarning.textContent = "O áudio do alarme pode ter sido bloqueado pelo navegador.";
+                        //     modalEventLocation.after(audioWarning);
+                    });
             }
 
             modalCloseBtn.addEventListener('click', () => {
                 alarmModal.style.display = 'none';
                 alarmSound.pause();
-                alarmSound.currentTime = 0;
+                alarmSound.currentTime = 0; // Reinicia o áudio para a próxima vez
             });
 
             function updateProgramStatus() {
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
+                console.log(`--- Atualizando Status (Hora Atual: ${now.toLocaleTimeString()}) ---`);
+
 
                 let currentActivity = null;
                 let nextActivity = null;
@@ -576,31 +603,42 @@
                 program.forEach((item, index) => {
                     const [itemHour, itemMinute] = item.time.split(':').map(Number);
                     const itemTimeInMinutes = itemHour * 60 + itemMinute;
-                    const alarmTimeInMinutes = itemTimeInMinutes - 10;
+                    const alarmTimeInMinutes = itemTimeInMinutes - 10; // Alarme 10 minutos antes
+
+                    console.log(`Evento: ${item.activity} (${item.time})`);
+                    console.log(`  Horário do Item (min): ${itemTimeInMinutes}`);
+                    console.log(`  Horário do Alarme (min): ${alarmTimeInMinutes}`);
+                    console.log(`  Condição do Alarme: (!${item.alarmTriggered} && ${currentTime} >= ${alarmTimeInMinutes} && ${currentTime} < ${itemTimeInMinutes})`);
+
 
                     if (!item.alarmTriggered && currentTime >= alarmTimeInMinutes && currentTime < itemTimeInMinutes) {
+                        console.log(`>>> ALARME PREPARADO para: ${item.activity}`);
                         showAlarmModal(item);
-                        item.alarmTriggered = true;
+                        item.alarmTriggered = true; // Marca como ativado para não disparar novamente
                     }
 
+                    // Lógica para marcar atividade atual e próxima
                     if (itemTimeInMinutes <= currentTime && !foundCurrent) {
                         let nextItemTimeInMinutes = Infinity;
 
                         let k = index + 1;
+                        // Pula atividades com o mesmo horário
                         while (program[k] && program[k].time === item.time) {
                             k++;
                         }
                         if (program[k]) {
                             const [nextItemHour, nextItemMinute] = program[k].time.split(':').map(Number);
                             nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
-                        } else if (program[index + 1]) {
+                        } else if (program[index + 1]) { // Fallback, caso a condição above não se aplique (ex: último item)
                             const [nextItemHour, nextItemMinute] = program[index + 1].time.split(':').map(Number);
                             nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
                         }
 
 
                         if (currentTime < nextItemTimeInMinutes || index === program.length - 1 || (program[index + 1] && program[index + 1].time !== item.time)) {
-                            if (currentTime < itemTimeInMinutes + getDurationOfActivity(item, index)) {
+                            // Calcula a duração estimada da atividade se não for o último item
+                            const duration = (index < program.length - 1) ? getDurationOfActivity(item, index) : 60; // 60 min padrão para o último
+                            if (currentTime < itemTimeInMinutes + duration) {
                                 currentActivity = item;
                                 document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('active');
                                 foundCurrent = true;
@@ -612,9 +650,9 @@
                         nextActivity = item;
                         document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('upcoming');
                     } else if (itemTimeInMinutes > currentTime && nextActivity && item.time === nextActivity.time) {
+                        // Se houver mais de uma atividade no mesmo horário, marca todas como "upcoming"
                         document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('upcoming');
                     }
-
                 });
 
                 if (currentActivity) {
@@ -642,19 +680,29 @@
             }
 
             function getDurationOfActivity(item, index) {
-                if (program[index + 1]) {
+                // Se a próxima atividade tiver o mesmo horário, a duração é 0 (ou seja, começa "imediatamente" junto)
+                // Se não houver próxima atividade, assume uma duração padrão (ex: 60 minutos)
+                if (index < program.length - 1) {
                     const [itemHour, itemMinute] = item.time.split(':').map(Number);
                     const itemTimeInMinutes = itemHour * 60 + itemMinute;
-                    const [nextItemHour, nextItemMinute] = program[index + 1].time.split(':').map(Number);
-                    const nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
-                    return nextItemTimeInMinutes - itemTimeInMinutes;
+
+                    let nextIndex = index + 1;
+                    while (program[nextIndex] && program[nextIndex].time === item.time) {
+                        nextIndex++; // Pula para a próxima atividade com horário diferente
+                    }
+
+                    if (program[nextIndex]) {
+                        const [nextItemHour, nextItemMinute] = program[nextIndex].time.split(':').map(Number);
+                        const nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
+                        return Math.max(0, nextItemTimeInMinutes - itemTimeInMinutes); // Garante que a duração não seja negativa
+                    }
                 }
-                return 60;
+                return 60; // Duração padrão se for a última atividade ou não houver próxima com horário diferente
             }
 
             renderProgram();
-            setInterval(updateProgramStatus, 1000);
-            updateProgramStatus();
+            setInterval(updateProgramStatus, 1000); // Atualiza a cada segundo
+            updateProgramStatus(); // Chama uma vez ao carregar para exibir o estado inicial
         });
     </script>
 </body>

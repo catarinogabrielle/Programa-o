@@ -47,6 +47,8 @@
             max-width: 900px;
             margin: 20px auto;
             animation: fadeIn 0.8s ease-out;
+            position: relative;
+            /* Para o modal */
         }
 
         @keyframes fadeIn {
@@ -233,6 +235,83 @@
             border-right: none;
         }
 
+        /* Estilos para o Modal */
+        .modal-overlay {
+            position: fixed;
+            /* Alterado de absolute para fixed para cobrir a tela toda */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            /* Escondido por padrão */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            /* Para ficar sobre os outros elementos */
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background-color: var(--bg-light);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 10px 25px var(--shadow-heavy);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: fadeInModal 0.5s ease-out;
+        }
+
+        @keyframes fadeInModal {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content h3 {
+            color: var(--primary-color);
+            font-size: 28px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            font-size: 18px;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-content p strong {
+            color: var(--secondary-color);
+        }
+
+        .modal-close-btn {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-close-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+
         @media (max-width: 768px) {
             body {
                 padding: 15px;
@@ -298,6 +377,19 @@
                 padding: 12px 15px;
                 font-size: 14px;
             }
+
+            .modal-content h3 {
+                font-size: 24px;
+            }
+
+            .modal-content p {
+                font-size: 16px;
+            }
+
+            .modal-close-btn {
+                padding: 10px 20px;
+                font-size: 15px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -321,14 +413,23 @@
             #program-list td {
                 padding: 10px;
                 font-size: 13px;
-
-                &:last-child {
-                    display: none;
-                }
             }
 
+            #program-list td:last-child,
             #program-list th:last-child {
                 display: none;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .modal-content h3 {
+                font-size: 20px;
+            }
+
+            .modal-content p {
+                font-size: 15px;
             }
         }
     </style>
@@ -366,6 +467,17 @@
         </div>
     </div>
 
+    <div id="alarmModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Alerta de Evento!</h3>
+            <p>O evento <strong id="modal-event-activity">Nome da Atividade</strong> começará em aproximadamente 10
+                minutos.</p>
+            <p><strong>Horário:</strong> <span id="modal-event-time">00:00</span></p>
+            <p><strong>Local:</strong> <span id="modal-event-location">Local</span></p>
+            <button id="modalCloseBtn" class="modal-close-btn">Entendido!</button>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const programBody = document.getElementById('program-body');
@@ -375,34 +487,64 @@
             const nextTimeSlotElem = document.getElementById('next-time-slot');
             const currentTimeDisplay = document.getElementById('current-time-display');
 
+            // Modal elements
+            const alarmModal = document.getElementById('alarmModal');
+            const modalEventActivity = document.getElementById('modal-event-activity');
+            const modalEventTime = document.getElementById('modal-event-time');
+            const modalEventLocation = document.getElementById('modal-event-location');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+
             // **IMPORTANTE:** Adapte esta array com a sua programação real.
             // Os horários devem estar em formato de string "HH:MM".
             const program = [
-                { time: "09:00", activity: "Abertura do Evento e Boas-Vindas", location: "Auditório Principal" },
-                { time: "09:30", activity: "Palestra: Inovação e Tecnologia", location: "Auditório Principal" },
-                { time: "10:30", activity: "Coffee Break e Networking", location: "Área de Convivência" },
-                { time: "11:00", activity: "Workshop: Desenvolvimento Web Moderno", location: "Sala 1" },
-                { time: "11:00", activity: "Mesa Redonda: Futuro da IA", location: "Sala 2" }, // Atividades simultâneas
-                { time: "12:30", activity: "Almoço", location: "Praça de Alimentação" },
-                { time: "14:00", activity: "Apresentação de Projetos", location: "Foyer" },
-                { time: "15:30", activity: "Palestra: Empreendedorismo Digital", location: "Auditório Principal" },
-                { time: "16:30", activity: "Encerramento e Sorteio de Prêmios", location: "Auditório Principal" },
-                { time: "17:00", activity: "Happy Hour de Despedida", location: "Bar do Evento" }
+                { time: "09:00", activity: "Abertura do Evento e Boas-Vindas", location: "Auditório Principal", alarmTriggered: false },
+                { time: "09:30", activity: "Palestra: Inovação e Tecnologia", location: "Auditório Principal", alarmTriggered: false },
+                { time: "10:30", activity: "Coffee Break e Networking", location: "Área de Convivência", alarmTriggered: false },
+                { time: "11:00", activity: "Workshop: Desenvolvimento Web Moderno", location: "Sala 1", alarmTriggered: false },
+                { time: "11:00", activity: "Mesa Redonda: Futuro da IA", location: "Sala 2", alarmTriggered: false },
+                { time: "12:30", activity: "Almoço", location: "Praça de Alimentação", alarmTriggered: false },
+                { time: "14:00", activity: "Apresentação de Projetos", location: "Foyer", alarmTriggered: false },
+                // Adicione um evento para teste de alarme em alguns minutos a partir de agora
+                // Exemplo: se agora são 14:50, adicione um evento para 15:00
+                // { time: "15:00", activity: "TESTE DE ALARME", location: "Auditório Principal", alarmTriggered: false },
+                { time: "14:54", activity: "Palestra: Empreendedorismo Digital", location: "Auditório Principal", alarmTriggered: false },
+                { time: "16:30", activity: "Encerramento e Sorteio de Prêmios", location: "Auditório Principal", alarmTriggered: false },
+                { time: "17:00", activity: "Happy Hour de Despedida", location: "Bar do Evento", alarmTriggered: false }
             ];
+
+            // Crie um objeto de áudio. SUBSTITUA 'URL_DO_SEU_ARQUIVO_DE_SOM.mp3' pelo caminho do seu arquivo de som.
+            // Se você não tiver um arquivo de som local, pode tentar usar um link de um site que permita hotlinking (não recomendado para produção)
+            // ou uma API de Text-to-Speech se precisar de algo mais dinâmico e tiver permissão.
+            // Para um simples teste, você pode omitir o som ou procurar por "beep sound data uri" para um som embutido.
+            const alarmSound = new Audio('URL_DO_SEU_ARQUIVO_DE_SOM.mp3'); // <<< SUBSTITUA AQUI!
 
             function renderProgram() {
                 programBody.innerHTML = '';
                 program.forEach((item, index) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                <td>${item.time}</td>
-                <td>${item.activity}</td>
-                <td>${item.location}</td>
-            `;
+                        <td>${item.time}</td>
+                        <td>${item.activity}</td>
+                        <td>${item.location}</td>
+                    `;
                     row.dataset.index = index;
                     programBody.appendChild(row);
                 });
             }
+
+            function showAlarmModal(eventItem) {
+                modalEventActivity.textContent = eventItem.activity;
+                modalEventTime.textContent = eventItem.time;
+                modalEventLocation.textContent = eventItem.location;
+                alarmModal.style.display = 'flex';
+                alarmSound.play().catch(error => console.error("Erro ao tocar o som:", error)); // Tenta tocar o som
+            }
+
+            modalCloseBtn.addEventListener('click', () => {
+                alarmModal.style.display = 'none';
+                alarmSound.pause(); // Para o som se ainda estiver tocando
+                alarmSound.currentTime = 0; // Reseta o som para o início
+            });
 
             function updateProgramStatus() {
                 const now = new Date();
@@ -419,27 +561,52 @@
                 program.forEach((item, index) => {
                     const [itemHour, itemMinute] = item.time.split(':').map(Number);
                     const itemTimeInMinutes = itemHour * 60 + itemMinute;
+                    const alarmTimeInMinutes = itemTimeInMinutes - 10; // 10 minutos antes
 
+                    // Lógica do Alarme
+                    if (!item.alarmTriggered && currentTime >= alarmTimeInMinutes && currentTime < itemTimeInMinutes) {
+                        showAlarmModal(item);
+                        item.alarmTriggered = true; // Marcar como disparado para não repetir
+                    }
+
+                    // Lógica para atividade atual e próxima (mantida)
                     if (itemTimeInMinutes <= currentTime && !foundCurrent) {
                         let nextItemTimeInMinutes = Infinity;
-                        if (program[index + 1]) {
+                        // Verifica se o próximo item existe e se tem o mesmo horário (para atividades simultâneas)
+                        let k = index + 1;
+                        while (program[k] && program[k].time === item.time) {
+                            k++;
+                        }
+                        if (program[k]) { // Usa o próximo evento com horário diferente
+                            const [nextItemHour, nextItemMinute] = program[k].time.split(':').map(Number);
+                            nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
+                        } else if (program[index + 1]) { // Fallback se não houver eventos com horário diferente
                             const [nextItemHour, nextItemMinute] = program[index + 1].time.split(':').map(Number);
                             nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
                         }
 
-                        if (currentTime < nextItemTimeInMinutes) {
-                            currentActivity = item;
-                            document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('active');
-                            foundCurrent = true;
+
+                        if (currentTime < nextItemTimeInMinutes || index === program.length - 1 || (program[index + 1] && program[index + 1].time !== item.time)) {
+                            if (currentTime < itemTimeInMinutes + getDurationOfActivity(item, index)) { // Considera uma duração padrão ou específica
+                                currentActivity = item;
+                                document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('active');
+                                foundCurrent = true; // Encontrou a atual, não precisa continuar procurando por "current" se não houver simultâneas com o mesmo status
+                            }
                         }
                     }
 
                     if (itemTimeInMinutes > currentTime && !nextActivity) {
                         nextActivity = item;
                         document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('upcoming');
+                    } else if (itemTimeInMinutes > currentTime && nextActivity && item.time === nextActivity.time) {
+                        // Se houver múltiplas atividades "a seguir" no mesmo horário, marca todas como upcoming
+                        document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('upcoming');
                     }
+
                 });
 
+
+                // Atualiza cards "Agora" e "A Seguir"
                 if (currentActivity) {
                     currentActivityElem.textContent = currentActivity.activity;
                     currentTimeSlotElem.textContent = `(${currentActivity.time} - ${currentActivity.location})`;
@@ -452,18 +619,36 @@
                     nextActivityElem.textContent = nextActivity.activity;
                     nextTimeSlotElem.textContent = `(${nextActivity.time} - ${nextActivity.location})`;
                 } else {
-                    nextActivityElem.textContent = "Fim da programação ou aguardando próxima atualização.";
-                    nextTimeSlotElem.textContent = "";
+                    if (currentActivity && program.indexOf(currentActivity) === program.length - 1) {
+                        nextActivityElem.textContent = "Fim da programação.";
+                        nextTimeSlotElem.textContent = "";
+                    } else {
+                        nextActivityElem.textContent = "Fim da programação ou aguardando próxima atualização.";
+                        nextTimeSlotElem.textContent = "";
+                    }
                 }
+
 
                 currentTimeDisplay.textContent = `Hora Atual: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             }
 
+            // Função auxiliar para determinar a "duração" de uma atividade para a lógica de "atual"
+            // Isso é um pouco complexo sem durações explícitas, então vamos assumir que dura até o próximo evento.
+            function getDurationOfActivity(item, index) {
+                if (program[index + 1]) {
+                    const [itemHour, itemMinute] = item.time.split(':').map(Number);
+                    const itemTimeInMinutes = itemHour * 60 + itemMinute;
+                    const [nextItemHour, nextItemMinute] = program[index + 1].time.split(':').map(Number);
+                    const nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
+                    return nextItemTimeInMinutes - itemTimeInMinutes;
+                }
+                return 60; // Assume 1 hora se for o último evento
+            }
+
+
             renderProgram();
-
-            setInterval(updateProgramStatus, 1000);
-
-            updateProgramStatus();
+            setInterval(updateProgramStatus, 1000); // Verifica a cada segundo
+            updateProgramStatus(); // Chamada inicial
         });
     </script>
 </body>

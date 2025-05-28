@@ -525,7 +525,7 @@
         const db = getFirestore(app);
         const programCollectionRef = collection(db, 'eventProgram');
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             const programBody = document.getElementById('program-body');
             const currentActivityElem = document.getElementById('current-activity');
             const currentTimeSlotElem = document.getElementById('current-time-slot');
@@ -542,29 +542,29 @@
 
             let program = [];
             const alarmSound = new Audio('alarme.mp3');
+            let updateIntervalId = null;
+            let refreshProgramIntervalId = null;
 
             async function loadProgramFromFirestore() {
-                if (loadingIndicatorProgram) loadingIndicatorProgram.classList.add('active');
-                if (programBody) programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando...</td></tr>';
+                if (loadingIndicatorProgram && !programBody.querySelector('tr')) {
+                    loadingIndicatorProgram.classList.add('active');
+                }
 
                 try {
                     const q = query(programCollectionRef, orderBy("time"));
                     const querySnapshot = await getDocs(q);
 
-                    if (querySnapshot.empty) {
-                        if (programBody) programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhuma programação disponível no momento.</td></tr>';
-                        return [];
-                    }
-
                     let programData = [];
-                    querySnapshot.forEach((doc) => {
-                        programData.push({ id: doc.id, ...doc.data(), alarmTriggered: false });
-                    });
+                    if (!querySnapshot.empty) {
+                        querySnapshot.forEach((doc) => {
+                            programData.push({ id: doc.id, ...doc.data(), alarmTriggered: false });
+                        });
+                    }
                     return programData;
 
                 } catch (error) {
                     console.error("Erro ao carregar programação do Firestore: ", error);
-                    if (programBody) programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Erro ao carregar programação. Tente novamente mais tarde.</td></tr>';
+                    if (programBody) programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Erro ao carregar programação.</td></tr>';
                     return [];
                 } finally {
                     if (loadingIndicatorProgram) loadingIndicatorProgram.classList.remove('active');
@@ -590,10 +590,10 @@
                 sortedProgram.forEach(item => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                    <td>${item.time}</td>
-                    <td>${item.activity}</td>
-                    <td>${item.location}</td>
-                `;
+                        <td>${item.time}</td>
+                        <td>${item.activity}</td>
+                        <td>${item.location}</td>
+                    `;
                     row.dataset.originalId = item.id;
                     programBody.appendChild(row);
                 });
@@ -607,7 +607,6 @@
                 alarmModal.style.display = 'flex';
 
                 alarmSound.play()
-                    .then(() => { /* console.log(`Alarme tocando para: ${eventItem.activity}`); */ })
                     .catch(error => {
                         console.error("Erro ao tocar o som do alarme:", error);
                     });
@@ -698,7 +697,6 @@
                     if (currentTimeInMinutesToday >= alarmTimeToday && currentTimeInMinutesToday < itemStartTimeInMinutes) {
                         showAlarmModal(item);
                         item.alarmTriggered = true;
-                        return;
                     }
                 });
 
@@ -725,23 +723,27 @@
                 currentTimeDisplay.textContent = `Hora Atual: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             }
 
-            async function initializePage() {
+            async function refreshProgramDataAndUI() {
                 program = await loadProgramFromFirestore();
-
                 if (programBody) {
                     renderProgram();
                     updateProgramStatus();
-                    if (program.length > 0) {
-                        setInterval(updateProgramStatus, 10000);
-                    }
-                } else {
-                    console.error("Elemento #program-body não encontrado no DOM.");
                 }
+            }
+
+            async function initializePage() {
+                await refreshProgramDataAndUI();
+
+                if (refreshProgramIntervalId) clearInterval(refreshProgramIntervalId);
+                if (updateIntervalId) clearInterval(updateIntervalId);
+
+                refreshProgramIntervalId = setInterval(refreshProgramDataAndUI, 3000);
             }
 
             initializePage();
         });
     </script>
+
 </body>
 
 </html>

@@ -545,14 +545,14 @@
 
             async function loadProgramFromFirestore() {
                 if (loadingIndicatorProgram) loadingIndicatorProgram.classList.add('active');
-                programBody.innerHTML = '';
+                if (programBody) programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando...</td></tr>';
+
                 try {
                     const q = query(programCollectionRef, orderBy("time"));
                     const querySnapshot = await getDocs(q);
 
                     if (querySnapshot.empty) {
-                        console.log('Nenhum item na programação encontrado no Firestore.');
-                        programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhuma programação disponível no momento.</td></tr>';
+                        if (programBody) programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhuma programação disponível no momento.</td></tr>';
                         return [];
                     }
 
@@ -560,20 +560,19 @@
                     querySnapshot.forEach((doc) => {
                         programData.push({ id: doc.id, ...doc.data(), alarmTriggered: false });
                     });
-                    console.log("Programação carregada do Firestore:", programData);
                     return programData;
 
                 } catch (error) {
                     console.error("Erro ao carregar programação do Firestore: ", error);
-                    programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Erro ao carregar programação. Tente novamente mais tarde.</td></tr>';
+                    if (programBody) programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Erro ao carregar programação. Tente novamente mais tarde.</td></tr>';
                     return [];
                 } finally {
                     if (loadingIndicatorProgram) loadingIndicatorProgram.classList.remove('active');
                 }
             }
 
-
             function renderProgram() {
+                if (!programBody) return;
                 programBody.innerHTML = '';
                 if (!program || program.length === 0) {
                     if (!loadingIndicatorProgram || !loadingIndicatorProgram.classList.contains('active')) {
@@ -588,38 +587,35 @@
                     return (ha * 60 + ma) - (hb * 60 + mb);
                 });
 
-                sortedProgram.forEach((item, index) => {
+                sortedProgram.forEach(item => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${item.time}</td>
-                        <td>${item.activity}</td>
-                        <td>${item.location}</td>
-                    `;
-
+                    <td>${item.time}</td>
+                    <td>${item.activity}</td>
+                    <td>${item.location}</td>
+                `;
                     row.dataset.originalId = item.id;
-                    row.dataset.arrayIndex = program.findIndex(pItem => pItem.id === item.id);
-
                     programBody.appendChild(row);
                 });
             }
 
             function showAlarmModal(eventItem) {
+                if (!alarmModal || !modalEventActivity || !modalEventTime || !modalEventLocation) return;
                 modalEventActivity.textContent = eventItem.activity;
                 modalEventTime.textContent = eventItem.time;
                 modalEventLocation.textContent = eventItem.location;
                 alarmModal.style.display = 'flex';
 
                 alarmSound.play()
-                    .then(() => { console.log(`Alarme tocando para: ${eventItem.activity}`); })
+                    .then(() => { /* console.log(`Alarme tocando para: ${eventItem.activity}`); */ })
                     .catch(error => {
                         console.error("Erro ao tocar o som do alarme:", error);
-                        console.warn("Possível causa: Bloqueio de autoplay. Interaja com a página.");
                     });
             }
 
             if (modalCloseBtn) {
                 modalCloseBtn.addEventListener('click', () => {
-                    alarmModal.style.display = 'none';
+                    if (alarmModal) alarmModal.style.display = 'none';
                     alarmSound.pause();
                     alarmSound.currentTime = 0;
                 });
@@ -627,104 +623,120 @@
 
             function updateProgramStatus() {
                 if (!program || program.length === 0) {
-                    currentActivityElem.textContent = "Nenhuma atividade.";
-                    currentTimeSlotElem.textContent = "";
-                    nextActivityElem.textContent = "Nenhuma atividade.";
-                    nextTimeSlotElem.textContent = "";
-                    currentTimeDisplay.textContent = `Hora Atual: ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+                    if (currentActivityElem) currentActivityElem.textContent = "Nenhuma programação.";
+                    if (currentTimeSlotElem) currentTimeSlotElem.textContent = "";
+                    if (nextActivityElem) nextActivityElem.textContent = "Nenhuma programação.";
+                    if (nextTimeSlotElem) nextTimeSlotElem.textContent = "";
+                    const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    if (currentTimeDisplay) currentTimeDisplay.textContent = `Hora Atual: ${nowTime}`;
                     return;
                 }
 
                 const now = new Date();
-                const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                const currentTimeInMinutesToday = currentHour * 60 + currentMinute;
 
-                let currentActivityItem = null;
-                let nextActivityItem = null;
-                let foundCurrent = false;
+                let currentEvent = null;
+                let nextEvent = null;
 
-                const tableRows = programBody.querySelectorAll('tr');
+                const tableRows = programBody ? programBody.querySelectorAll('tr') : [];
+                tableRows.forEach(row => row.classList.remove('active', 'upcoming'));
 
-                tableRows.forEach(row => {
-                    row.classList.remove('active', 'upcoming');
-                });
-
-                program.forEach((item, index) => {
+                for (let i = 0; i < program.length; i++) {
+                    const item = program[i];
                     const [itemHour, itemMinute] = item.time.split(':').map(Number);
-                    const itemTimeInMinutes = itemHour * 60 + itemMinute;
-                    const alarmTimeInMinutes = itemTimeInMinutes - 10;
+                    const itemStartTimeInMinutes = itemHour * 60 + itemMinute;
 
-                    if (!item.alarmTriggered && currentTimeInMinutes >= alarmTimeInMinutes && currentTimeInMinutes < itemTimeInMinutes) {
-                        showAlarmModal(item);
-                        item.alarmTriggered = true;
-                    }
+                    let itemEndTimeInMinutes;
+                    if (i < program.length - 1) {
+                        const [nextItemHour, nextItemMinute] = program[i + 1].time.split(':').map(Number);
+                        let nextItemStartTimeComparedToCurrentItem = nextItemHour * 60 + nextItemMinute;
 
-                    let duration = 60;
-                    let nextDistinctActivityTime = Infinity;
-
-                    for (let k = index + 1; k < program.length; k++) {
-                        const [nextProgItemHour, nextProgItemMinute] = program[k].time.split(':').map(Number);
-                        const nextProgItemTimeInMinutes = nextProgItemHour * 60 + nextProgItemMinute;
-                        if (nextProgItemTimeInMinutes > itemTimeInMinutes) {
-                            nextDistinctActivityTime = nextProgItemTimeInMinutes;
-                            break;
+                        if (nextItemStartTimeComparedToCurrentItem < itemStartTimeInMinutes) {
+                            itemEndTimeInMinutes = 24 * 60;
+                        } else {
+                            itemEndTimeInMinutes = nextItemStartTimeComparedToCurrentItem;
                         }
-                    }
-                    if (nextDistinctActivityTime !== Infinity) {
-                        duration = nextDistinctActivityTime - itemTimeInMinutes;
+                    } else {
+                        itemEndTimeInMinutes = itemStartTimeInMinutes + 60;
+                        if (itemEndTimeInMinutes > 24 * 60) itemEndTimeInMinutes = 24 * 60;
                     }
 
-                    if (currentTimeInMinutes >= itemTimeInMinutes && currentTimeInMinutes < (itemTimeInMinutes + duration)) {
-                        if (!foundCurrent) {
-                            currentActivityItem = item;
-                            foundCurrent = true;
-                        }
+                    const rowElement = Array.from(tableRows).find(row => row.dataset.originalId === item.id);
 
-                        const rowElement = Array.from(tableRows).find(row => row.dataset.originalId === item.id);
+                    if (!currentEvent && itemStartTimeInMinutes <= currentTimeInMinutesToday && currentTimeInMinutesToday < itemEndTimeInMinutes) {
+                        currentEvent = item;
                         if (rowElement) rowElement.classList.add('active');
-
-                    } else if (itemTimeInMinutes > currentTimeInMinutes) {
-                        if (!nextActivityItem) {
-                            nextActivityItem = item;
-                        }
-
-                        const rowElement = Array.from(tableRows).find(row => row.dataset.originalId === item.id);
+                    }
+                    else if (!nextEvent && itemStartTimeInMinutes > currentTimeInMinutesToday) {
+                        nextEvent = item;
                         if (rowElement) rowElement.classList.add('upcoming');
                     }
+                    else if (itemStartTimeInMinutes > currentTimeInMinutesToday) {
+                        if (rowElement) rowElement.classList.add('upcoming');
+                    }
+                }
+
+                if (!nextEvent && program.length > 0) {
+                    if (!currentEvent || (currentEvent && program.indexOf(currentEvent) < program.length - 1)) {
+                        nextEvent = program[0];
+                        const firstRowElement = Array.from(tableRows).find(row => row.dataset.originalId === program[0].id);
+                        if (firstRowElement && (!currentEvent || currentEvent.id !== program[0].id)) {
+                            firstRowElement.classList.add('upcoming');
+                        }
+                    }
+                }
+
+                program.forEach(item => {
+                    if (item.alarmTriggered) return;
+
+                    const [itemHour, itemMinute] = item.time.split(':').map(Number);
+                    const itemStartTimeInMinutes = itemHour * 60 + itemMinute;
+
+                    let alarmTimeToday = itemStartTimeInMinutes - 10;
+                    if (currentTimeInMinutesToday >= alarmTimeToday && currentTimeInMinutesToday < itemStartTimeInMinutes) {
+                        showAlarmModal(item);
+                        item.alarmTriggered = true;
+                        return;
+                    }
                 });
 
-                if (currentActivityItem) {
-                    currentActivityElem.textContent = currentActivityItem.activity;
-                    currentTimeSlotElem.textContent = `(${currentActivityItem.time} - ${currentActivityItem.location})`;
-                } else if (program.length > 0 && currentTimeInMinutes < (program[0].time.split(':')[0] * 60 + parseInt(program[0].time.split(':')[1]))) {
-                    currentActivityElem.textContent = "O evento ainda não começou.";
-                    currentTimeSlotElem.textContent = `Início às ${program[0].time}`;
-                }
-                else {
+                if (currentEvent) {
+                    currentActivityElem.textContent = currentEvent.activity;
+                    currentTimeSlotElem.textContent = `(${currentEvent.time} - ${currentEvent.location})`;
+                } else {
                     currentActivityElem.textContent = "Nenhuma atividade no momento.";
                     currentTimeSlotElem.textContent = "";
                 }
 
-                if (nextActivityItem) {
-                    nextActivityElem.textContent = nextActivityItem.activity;
-                    nextTimeSlotElem.textContent = `(${nextActivityItem.time} - ${nextActivityItem.location})`;
-                } else {
-                    if (foundCurrent || (program.length > 0 && currentTimeInMinutes >= (program[program.length - 1].time.split(':')[0] * 60 + parseInt(program[program.length - 1].time.split(':')[1])))) {
+                if (nextEvent) {
+                    if (currentEvent && currentEvent.id === nextEvent.id && program.indexOf(currentEvent) === program.length - 1) {
                         nextActivityElem.textContent = "Fim da programação.";
                         nextTimeSlotElem.textContent = "";
                     } else {
-                        nextActivityElem.textContent = "Aguardando programação.";
-                        nextTimeSlotElem.textContent = "";
+                        nextActivityElem.textContent = nextEvent.activity;
+                        nextTimeSlotElem.textContent = `(${nextEvent.time} - ${nextEvent.location})`;
                     }
+                } else {
+                    nextActivityElem.textContent = "Fim da programação.";
+                    nextTimeSlotElem.textContent = "";
                 }
-
                 currentTimeDisplay.textContent = `Hora Atual: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             }
 
             async function initializePage() {
                 program = await loadProgramFromFirestore();
-                renderProgram();
-                updateProgramStatus();
-                setInterval(updateProgramStatus, 10000);
+
+                if (programBody) {
+                    renderProgram();
+                    updateProgramStatus();
+                    if (program.length > 0) {
+                        setInterval(updateProgramStatus, 10000);
+                    }
+                } else {
+                    console.error("Elemento #program-body não encontrado no DOM.");
+                }
             }
 
             initializePage();

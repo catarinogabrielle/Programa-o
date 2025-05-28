@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin da Programação</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="img/icon.png">
+    <link rel="shortcut icon" href="img/icon.png" type="image/x-icon">
+
+    <style>
+        :root {
+            --primary-color: #050c72;
+            --secondary-color: #476cbc;
+            --text-dark: #333333;
+            --text-light: #f8f8f8;
+            --bg-light: #ffffff;
+            --bg-gradient-start: #e0f2f7;
+            --bg-gradient-end: #a5e1cd;
+            --shadow-heavy: rgba(0, 0, 0, 0.2);
+            --shadow-light: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .admin-container {
+            background-color: var(--bg-light);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0px 15px 30px var(--shadow-heavy);
+            width: 90%;
+            max-width: 900px;
+            margin: 30px auto;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .admin-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 38px;
+            font-weight: 700;
+        }
+
+        .admin-header button {
+            background-color: #d32f2f;
+            color: var(--text-light);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .admin-header button:hover {
+            background-color: #b71c1c;
+        }
+
+        .form-section {
+            background-color: #f8f8f8;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px var(--shadow-light);
+            margin-bottom: 30px;
+            border: 1px solid #eee;
+        }
+
+        .form-section h2 {
+            color: var(--secondary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-group input[type="time"],
+        .form-group input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-buttons button {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex-grow: 1;
+            flex-basis: calc(50% - 5px);
+            min-width: 150px;
+        }
+
+        .form-buttons button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .form-buttons button.clear-btn {
+            background-color: #757575;
+        }
+
+        .form-buttons button.clear-btn:hover {
+            background-color: #555555;
+        }
+
+        .program-table-section h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-align: left;
+        }
+
+        .table-responsive-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px var(--shadow-light);
+            margin-bottom: 20px;
+        }
+
+        .program-table-section table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            background-color: var(--bg-light);
+        }
+
+        .program-table-section th,
+        .program-table-section td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+
+        .program-table-section td:nth-child(2),
+        .program-table-section td:nth-child(3) {
+            white-space: normal;
+        }
+
+
+        .program-table-section thead {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-light);
+        }
+
+        .program-table-section thead th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        .program-table-section thead th:last-child {
+            border-top-right-radius: 10px;
+        }
+
+        .program-table-section th {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .program-table-section tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .program-table-section tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-start;
+        }
+
+        .action-buttons button {
+            background-color: #ffab00;
+            color: var(--text-dark);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .action-buttons button:hover {
+            background-color: #e69d00;
+        }
+
+        .action-buttons button.delete-btn {
+            background-color: #d32f2f;
+            color: var(--text-light);
+        }
+
+        .action-buttons button.delete-btn:hover {
+            background-color: #b71c1c;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 20px;
+                margin: 20px auto;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .admin-header h1 {
+                font-size: 30px;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+
+            .admin-header button {
+                width: auto;
+                align-self: center;
+                padding: 12px 25px;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .form-section h2,
+            .program-table-section h2 {
+                font-size: 24px;
+            }
+
+            .form-group input[type="time"],
+            .form-group input[type="text"] {
+                font-size: 15px;
+            }
+
+            .form-buttons {
+                flex-direction: column;
+            }
+
+            .form-buttons button {
+                padding: 12px;
+                flex-basis: auto;
+                width: 100%;
+            }
+
+            .program-table-section table {
+                min-width: 0;
+            }
+
+            .program-table-section th,
+            .program-table-section td {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            .program-table-section td:nth-child(2),
+            .program-table-section td:nth-child(3) {
+                white-space: normal;
+                min-width: 150px;
+            }
+
+            .program-table-section td:nth-child(1),
+            .program-table-section td:nth-child(4) {
+                white-space: nowrap;
+            }
+
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-buttons button {
+                padding: 6px 8px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .admin-container {
+                padding: 15px;
+                width: 85%;
+            }
+
+            .admin-header h1 {
+                font-size: 24px;
+            }
+
+            .admin-header button {
+                padding: 10px 20px;
+                font-size: 15px;
+            }
+
+
+            .form-section h2,
+            .program-table-section h2 {
+                font-size: 20px;
+            }
+
+            .program-table-section th,
+            .program-table-section td {
+                font-size: 13px;
+                padding: 8px 10px;
+            }
+
+            .action-buttons {
+                gap: 3px;
+            }
+
+            .action-buttons button {
+                font-size: 12px;
+                padding: 5px 7px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Dashboard Programação</h1>
+            <button id="logoutBtn">Sair</button>
+        </div>
+
+        <div class="form-section">
+            <h2>Adicionar/Editar Atividade</h2>
+            <form id="activityForm">
+                <input type="hidden" id="activityIndex">
+                <div class="form-group">
+                    <label for="activityTime">Horário:</label>
+                    <input type="time" id="activityTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityName">Atividade:</label>
+                    <input type="text" id="activityName" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityLocation">Local:</label>
+                    <input type="text" id="activityLocation" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" id="saveActivityBtn">Adicionar Atividade</button>
+                    <button type="button" id="clearFormBtn" class="clear-btn">Limpar Formulário</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="program-table-section">
+            <h2>Programação Atual</h2>
+            <div class="table-responsive-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Horário</th>
+                            <th>Atividade</th>
+                            <th>Local</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminProgramBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const logoutBtn = document.getElementById('logoutBtn');
+            const activityForm = document.getElementById('activityForm');
+            const activityIndexInput = document.getElementById('activityIndex');
+            const activityTimeInput = document.getElementById('activityTime');
+            const activityNameInput = document.getElementById('activityName');
+            const activityLocationInput = document.getElementById('activityLocation');
+            const saveActivityBtn = document.getElementById('saveActivityBtn');
+            const clearFormBtn = document.getElementById('clearFormBtn');
+            const adminProgramBody = document.getElementById('adminProgramBody');
+
+            // Autenticação (simplificada)
+            if (localStorage.getItem('loggedIn') !== 'true') {
+                alert("Você não está logado. Redirecionando para login...");
+                window.location.href = 'login.html';
+                return;
+            }
+
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('loggedIn');
+                alert("Você foi desconectado.");
+                window.location.href = 'login.html';
+            });
+
+            function loadProgram() {
+                const storedProgram = localStorage.getItem('eventProgram');
+                return storedProgram ? JSON.parse(storedProgram) : [
+                    { time: "09:00", activity: "Abertura do Evento e Boas-Vindas", location: "Auditório Principal" },
+                    { time: "09:30", activity: "Palestra: Inovação e Tecnologia em um Mundo Conectado Globalmente", location: "Auditório Principal" },
+                    { time: "10:30", activity: "Coffee Break e Networking", location: "Área de Convivência" },
+                    { time: "11:00", activity: "Workshop: Desenvolvimento Web Moderno com Frameworks Ágeis", location: "Sala 1 Anexa" },
+                    { time: "11:00", activity: "Mesa Redonda: O Futuro da Inteligência Artificial e Machine Learning", location: "Sala 2 Conectada" },
+                    { time: "12:30", activity: "Almoço de Networking e Confraternização entre Participantes", location: "Praça de Alimentação Central" },
+                    { time: "14:00", activity: "Apresentação de Projetos Inovadores e Startups Promissoras", location: "Foyer Principal do Centro de Convenções" },
+                    { time: "15:10", activity: "Palestra: Empreendedorismo Digital e Estratégias de Marketing Online", location: "Auditório Principal" },
+                    { time: "16:25", activity: "Encerramento e Sorteio de Prêmios Exclusivos para os Participantes", location: "Auditório Principal" },
+                    { time: "17:00", activity: "Happy Hour de Despedida com Música ao Vivo e Bebidas", location: "Bar Temático do Evento Internacional" }
+                ];
+            }
+
+            let program = loadProgram();
+
+            function saveProgram() {
+                const programToSave = program.map(item => {
+                    const { alarmTriggered, ...rest } = item;
+                    return rest;
+                });
+                localStorage.setItem('eventProgram', JSON.stringify(programToSave));
+            }
+
+            function renderAdminProgram() {
+                adminProgramBody.innerHTML = '';
+                program.sort((a, b) => {
+                    const [ha, ma] = a.time.split(':').map(Number);
+                    const [hb, mb] = b.time.split(':').map(Number);
+                    return (ha * 60 + ma) - (hb * 60 + mb);
+                });
+
+                program.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.time}</td>
+                        <td>${item.activity}</td>
+                        <td>${item.location}</td>
+                        <td class="action-buttons">
+                            <button class="edit-btn" data-index="${index}" title="Editar Atividade">Editar</button>
+                            <button class="delete-btn" data-index="${index}" title="Excluir Atividade">Excluir</button>
+                        </td>
+                    `;
+                    adminProgramBody.appendChild(row);
+                });
+            }
+
+            activityForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const time = activityTimeInput.value;
+                const activity = activityNameInput.value;
+                const location = activityLocationInput.value;
+                const index = activityIndexInput.value;
+
+                if (!time || !activity || !location) {
+                    alert("Por favor, preencha todos os campos!");
+                    return;
+                }
+
+                if (index === '') {
+                    program.push({ time, activity, location });
+                } else {
+                    program[parseInt(index)] = { time, activity, location };
+                }
+
+                saveProgram();
+                renderAdminProgram();
+                clearForm();
+            });
+
+            clearFormBtn.addEventListener('click', clearForm);
+
+            function clearForm() {
+                activityForm.reset();
+                activityIndexInput.value = '';
+                saveActivityBtn.textContent = 'Adicionar Atividade';
+                activityTimeInput.focus();
+            }
+
+            adminProgramBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('edit-btn')) {
+                    const index = parseInt(e.target.dataset.index);
+                    const itemToEdit = program[index];
+
+                    activityTimeInput.value = itemToEdit.time;
+                    activityNameInput.value = itemToEdit.activity;
+                    activityLocationInput.value = itemToEdit.location;
+                    activityIndexInput.value = index;
+                    saveActivityBtn.textContent = 'Salvar Edição';
+                    activityTimeInput.focus();
+                } else if (e.target.classList.contains('delete-btn')) {
+                    const index = parseInt(e.target.dataset.index);
+                    if (confirm(`Tem certeza que deseja excluir "${program[index].activity}"?`)) {
+                        program.splice(index, 1);
+                        saveProgram();
+                        renderAdminProgram();
+                        clearForm();
+                    }
+                }
+            });
+
+            renderAdminProgram();
+        });
+    </script>
+</body>
+
+</html>

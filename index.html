@@ -10,8 +10,6 @@
     <link rel="shortcut icon" href="img/icon.png" type="image/x-icon">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-
         :root {
             --primary-color: #050c72;
             --secondary-color: #476cbc;
@@ -53,22 +51,15 @@
             overflow: hidden;
         }
 
-        /* Estilos para o cabeçalho com a logo */
         .header-logo {
             text-align: center;
-            margin-bottom: 30px;
-            /* Espaço abaixo da logo e antes do h1 */
         }
 
         .header-logo img {
             max-width: 250px;
-            /* Define a largura máxima da logo */
             height: auto;
-            /* Mantém a proporção da imagem */
             margin-bottom: 10px;
-            /* Espaço abaixo da logo */
             filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.486));
-            /* Sua sombra original */
         }
 
 
@@ -97,7 +88,6 @@
             font-size: 45px;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
             margin-top: 0;
-            /* Removendo margem superior padrão para não empurrar a logo */
         }
 
         h2 {
@@ -199,10 +189,8 @@
         #program-list table {
             width: 100%;
             border-collapse: separate;
+            border-spacing: 0 10px;
             margin-top: 30px;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0px 5px 15px var(--shadow-light);
         }
 
         #program-list th,
@@ -212,9 +200,18 @@
             border-bottom: none;
         }
 
-        #program-list thead {
+        #program-list thead tr {
             background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
             color: var(--text-light);
+            box-shadow: none;
+        }
+
+        #program-list thead th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        #program-list thead th:last-child {
+            border-top-right-radius: 10px;
         }
 
         #program-list th {
@@ -227,13 +224,23 @@
             background-color: var(--bg-light);
             transition: all 0.3s ease-in-out;
             border-radius: 8px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.05);
+            box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.07);
+        }
+
+        #program-list tbody tr td:first-child {
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+
+        #program-list tbody tr td:last-child {
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
         }
 
         #program-list tbody tr:hover {
-            transform: translateX(5px);
-            box-shadow: 0px 5px 15px var(--shadow-heavy);
-            background-color: #f5f5f5;
+            transform: translateX(5px) scale(1.01);
+            box-shadow: 0px 6px 18px var(--shadow-heavy);
+            background-color: #f9f9f9;
         }
 
         #program-list tr.active {
@@ -248,14 +255,6 @@
             font-weight: 600;
             color: var(--accent-color-next);
             border-left: 4px solid var(--accent-color-next);
-        }
-
-        #program-list td:last-child {
-            border-right: none;
-        }
-
-        #program-list th:last-child {
-            border-right: none;
         }
 
         .modal-overlay {
@@ -344,10 +343,8 @@
                 margin: 15px auto;
             }
 
-            /* Ajuste da logo para mobile */
             .header-logo img {
                 max-width: 180px;
-                /* Reduz o tamanho da logo em telas menores */
             }
 
             h1 {
@@ -393,8 +390,15 @@
             }
 
             #program-list table {
-                border-spacing: 0px 5px;
                 border-radius: 8px;
+            }
+
+            #program-list thead th:first-child {
+                border-top-left-radius: 8px;
+            }
+
+            #program-list thead th:last-child {
+                border-top-right-radius: 8px;
             }
 
             #program-list th,
@@ -422,10 +426,8 @@
                 padding: 15px;
             }
 
-            /* Mais ajustes para a logo em telas muito pequenas */
             .header-logo img {
                 max-width: 150px;
-                /* Reduz ainda mais para telas menores */
             }
 
             h1 {
@@ -446,10 +448,11 @@
                 font-size: 13px;
             }
 
-            #program-list td:last-child,
-            #program-list th:last-child {
+            #program-list td:nth-child(3),
+            #program-list th:nth-child(3) {
                 display: none;
             }
+
 
             .modal-content {
                 padding: 20px;
@@ -528,25 +531,42 @@
             const modalEventLocation = document.getElementById('modal-event-location');
             const modalCloseBtn = document.getElementById('modalCloseBtn');
 
-            // **IMPORTANTE:** Adapte esta array com a sua programação real.
-            // Os horários devem estar em formato de string "HH:MM".
-            const program = [
-                { time: "09:00", activity: "Abertura do Evento e Boas-Vindas", location: "Auditório Principal", alarmTriggered: false },
-                { time: "09:30", activity: "Palestra: Inovação e Tecnologia", location: "Auditório Principal", alarmTriggered: false },
-                { time: "10:30", activity: "Coffee Break e Networking", location: "Área de Convivência", alarmTriggered: false },
-                { time: "11:00", activity: "Workshop: Desenvolvimento Web Moderno", location: "Sala 1", alarmTriggered: false },
-                { time: "11:00", activity: "Mesa Redonda: Futuro da IA", location: "Sala 2", alarmTriggered: false },
-                { time: "12:30", activity: "Almoço", location: "Praça de Alimentação", alarmTriggered: false },
-                { time: "14:00", activity: "Apresentação de Projetos", location: "Foyer", alarmTriggered: false },
-                { time: "15:10", activity: "Palestra: Empreendedorismo Digital", location: "Auditório Principal", alarmTriggered: false },
-                { time: "16:25", activity: "Encerramento e Sorteio de Prêmios", location: "Auditório Principal", alarmTriggered: false },
-                { time: "17:00", activity: "Happy Hour de Despedida", location: "Bar do Evento", alarmTriggered: false }
-            ];
+            function loadProgramFromLocalStorage() {
+                const storedProgram = localStorage.getItem('eventProgram');
+                if (storedProgram) {
+                    const parsedProgram = JSON.parse(storedProgram);
+                    return parsedProgram.map(item => ({
+                        ...item,
+                        alarmTriggered: typeof item.alarmTriggered === 'boolean' ? item.alarmTriggered : false
+                    }));
+                }
 
-            const alarmSound = new Audio('alarme.mp3'); // Certifique-se que 'alarme.mp3' está no caminho correto
+                return [
+                    { time: "09:00", activity: "Abertura do Evento e Boas-Vindas", location: "Auditório Principal", alarmTriggered: false },
+                    { time: "09:30", activity: "Palestra: Inovação e Tecnologia", location: "Auditório Principal", alarmTriggered: false },
+                    { time: "10:30", activity: "Coffee Break e Networking", location: "Área de Convivência", alarmTriggered: false },
+                    { time: "11:00", activity: "Workshop: Desenvolvimento Web Moderno", location: "Sala 1", alarmTriggered: false },
+                    { time: "11:00", activity: "Mesa Redonda: Futuro da IA", location: "Sala 2", alarmTriggered: false },
+                    { time: "12:30", activity: "Almoço", location: "Praça de Alimentação", alarmTriggered: false },
+                    { time: "14:00", activity: "Apresentação de Projetos", location: "Foyer", alarmTriggered: false },
+                    { time: "15:10", activity: "Palestra: Empreendedorismo Digital", location: "Auditório Principal", alarmTriggered: false }, // Exemplo de horário quebrado
+                    { time: "16:25", activity: "Encerramento e Sorteio de Prêmios", location: "Auditório Principal", alarmTriggered: false }, // Exemplo de horário quebrado
+                    { time: "17:00", activity: "Happy Hour de Despedida", location: "Bar do Evento", alarmTriggered: false }
+                ];
+            }
+
+            let program = loadProgramFromLocalStorage();
+
+            const alarmSound = new Audio('alarme.mp3');
 
             function renderProgram() {
                 programBody.innerHTML = '';
+                program.sort((a, b) => {
+                    const [ha, ma] = a.time.split(':').map(Number);
+                    const [hb, mb] = b.time.split(':').map(Number);
+                    return (ha * 60 + ma) - (hb * 60 + mb);
+                });
+
                 program.forEach((item, index) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -565,100 +585,98 @@
                 modalEventLocation.textContent = eventItem.location;
                 alarmModal.style.display = 'flex';
 
-                // Tenta tocar o áudio e captura qualquer erro (como bloqueio do navegador)
                 alarmSound.play()
                     .then(() => {
-                        console.log(`Alarme tocando para: ${eventItem.activity}`);
+                        // console.log(`Alarme tocando para: ${eventItem.activity}`); // Descomente para depuração
                     })
                     .catch(error => {
                         console.error("Erro ao tocar o som do alarme:", error);
-                        console.warn("Possível causa: O navegador bloqueou a reprodução automática de áudio. É necessário uma interação do usuário com a página antes do áudio poder ser reproduzido.");
-                        // Você pode adicionar um elemento na modal para avisar o usuário, se desejar
-                        // Ex: const audioWarning = document.createElement('p');
-                        //     audioWarning.textContent = "O áudio do alarme pode ter sido bloqueado pelo navegador.";
-                        //     modalEventLocation.after(audioWarning);
+                        console.warn("Possível causa: O navegador bloqueou a reprodução automática de áudio. É necessário uma interação do usuário com a página para ativá-lo.");
                     });
             }
 
             modalCloseBtn.addEventListener('click', () => {
                 alarmModal.style.display = 'none';
                 alarmSound.pause();
-                alarmSound.currentTime = 0; // Reinicia o áudio para a próxima vez
+                alarmSound.currentTime = 0;
             });
 
             function updateProgramStatus() {
                 const now = new Date();
                 const currentTime = now.getHours() * 60 + now.getMinutes();
-                console.log(`--- Atualizando Status (Hora Atual: ${now.toLocaleTimeString()}) ---`);
-
 
                 let currentActivity = null;
                 let nextActivity = null;
                 let foundCurrent = false;
+                let foundNext = false;
 
                 document.querySelectorAll('#program-body tr').forEach(row => {
                     row.classList.remove('active', 'upcoming');
                 });
 
+                let activeActivities = [];
+
                 program.forEach((item, index) => {
                     const [itemHour, itemMinute] = item.time.split(':').map(Number);
                     const itemTimeInMinutes = itemHour * 60 + itemMinute;
-                    const alarmTimeInMinutes = itemTimeInMinutes - 10; // Alarme 10 minutos antes
-
-                    console.log(`Evento: ${item.activity} (${item.time})`);
-                    console.log(`  Horário do Item (min): ${itemTimeInMinutes}`);
-                    console.log(`  Horário do Alarme (min): ${alarmTimeInMinutes}`);
-                    console.log(`  Condição do Alarme: (!${item.alarmTriggered} && ${currentTime} >= ${alarmTimeInMinutes} && ${currentTime} < ${itemTimeInMinutes})`);
-
+                    const alarmTimeInMinutes = itemTimeInMinutes - 10;
 
                     if (!item.alarmTriggered && currentTime >= alarmTimeInMinutes && currentTime < itemTimeInMinutes) {
-                        console.log(`>>> ALARME PREPARADO para: ${item.activity}`);
                         showAlarmModal(item);
-                        item.alarmTriggered = true; // Marca como ativado para não disparar novamente
+                        item.alarmTriggered = true;
+                        localStorage.setItem('eventProgram', JSON.stringify(program));
                     }
 
-                    // Lógica para marcar atividade atual e próxima
-                    if (itemTimeInMinutes <= currentTime && !foundCurrent) {
-                        let nextItemTimeInMinutes = Infinity;
+                    let duration = 60;
+                    let nextDistinctActivityTime = Infinity;
 
-                        let k = index + 1;
-                        // Pula atividades com o mesmo horário
-                        while (program[k] && program[k].time === item.time) {
-                            k++;
-                        }
-                        if (program[k]) {
-                            const [nextItemHour, nextItemMinute] = program[k].time.split(':').map(Number);
-                            nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
-                        } else if (program[index + 1]) { // Fallback, caso a condição above não se aplique (ex: último item)
-                            const [nextItemHour, nextItemMinute] = program[index + 1].time.split(':').map(Number);
-                            nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
-                        }
-
-
-                        if (currentTime < nextItemTimeInMinutes || index === program.length - 1 || (program[index + 1] && program[index + 1].time !== item.time)) {
-                            // Calcula a duração estimada da atividade se não for o último item
-                            const duration = (index < program.length - 1) ? getDurationOfActivity(item, index) : 60; // 60 min padrão para o último
-                            if (currentTime < itemTimeInMinutes + duration) {
-                                currentActivity = item;
-                                document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('active');
-                                foundCurrent = true;
-                            }
+                    for (let k = index + 1; k < program.length; k++) {
+                        const [nextProgItemHour, nextProgItemMinute] = program[k].time.split(':').map(Number);
+                        const nextProgItemTimeInMinutes = nextProgItemHour * 60 + nextProgItemMinute;
+                        if (nextProgItemTimeInMinutes > itemTimeInMinutes) {
+                            nextDistinctActivityTime = nextProgItemTimeInMinutes;
+                            break;
                         }
                     }
 
-                    if (itemTimeInMinutes > currentTime && !nextActivity) {
-                        nextActivity = item;
-                        document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('upcoming');
-                    } else if (itemTimeInMinutes > currentTime && nextActivity && item.time === nextActivity.time) {
-                        // Se houver mais de uma atividade no mesmo horário, marca todas como "upcoming"
-                        document.querySelector(`#program-body tr[data-index="${index}"]`).classList.add('upcoming');
+                    if (nextDistinctActivityTime !== Infinity) {
+                        duration = nextDistinctActivityTime - itemTimeInMinutes;
+                    } else if (index < program.length - 1) {
+                        // Se não houver atividade posterior com horário diferente, mas não for a última,
+                        // pode significar que as próximas são no mesmo horário.
+                        // Neste caso, a duração pode ser um valor padrão ou até o fim do evento se for a última "sequência".
+                        // Se for a última, duração já é 60.
+                    }
+
+
+                    const rowElement = document.querySelector(`#program-body tr[data-index="${index}"]`);
+
+                    if (currentTime >= itemTimeInMinutes && currentTime < (itemTimeInMinutes + duration)) {
+                        if (rowElement) rowElement.classList.add('active');
+                        activeActivities.push(item);
+                        foundCurrent = true;
+                    }
+
+                    else if (itemTimeInMinutes > currentTime) {
+                        if (!foundNext) {
+                            nextActivity = item;
+                            foundNext = true;
+                        }
+                        if (rowElement) rowElement.classList.add('upcoming');
                     }
                 });
 
-                if (currentActivity) {
-                    currentActivityElem.textContent = currentActivity.activity;
-                    currentTimeSlotElem.textContent = `(${currentActivity.time} - ${currentActivity.location})`;
-                } else {
+                if (activeActivities.length > 0) {
+                    currentActivityElem.textContent = activeActivities.map(act => act.activity).join(' / ');
+                    currentTimeSlotElem.textContent = `(${activeActivities[0].time} - ${activeActivities.map(act => act.location).join(' / ')})`;
+                } else if (currentTime < program[0].time.split(':').map(Number)[0] * 60 + program[0].time.split(':').map(Number)[1]) {
+                    currentActivityElem.textContent = "O evento ainda não começou.";
+                    currentTimeSlotElem.textContent = `Início às ${program[0].time}`;
+                } else if (foundCurrent) {
+                    currentActivityElem.textContent = "Verificando...";
+                    currentTimeSlotElem.textContent = "";
+                }
+                else {
                     currentActivityElem.textContent = "Nenhuma atividade no momento.";
                     currentTimeSlotElem.textContent = "";
                 }
@@ -667,11 +685,11 @@
                     nextActivityElem.textContent = nextActivity.activity;
                     nextTimeSlotElem.textContent = `(${nextActivity.time} - ${nextActivity.location})`;
                 } else {
-                    if (currentActivity && program.indexOf(currentActivity) === program.length - 1) {
+                    if (foundCurrent || currentTime >= program[program.length - 1].time.split(':').map(Number)[0] * 60 + program[program.length - 1].time.split(':').map(Number)[1]) {
                         nextActivityElem.textContent = "Fim da programação.";
                         nextTimeSlotElem.textContent = "";
                     } else {
-                        nextActivityElem.textContent = "Fim da programação ou aguardando próxima atualização.";
+                        nextActivityElem.textContent = "Aguardando programação.";
                         nextTimeSlotElem.textContent = "";
                     }
                 }
@@ -679,32 +697,12 @@
                 currentTimeDisplay.textContent = `Hora Atual: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             }
 
-            function getDurationOfActivity(item, index) {
-                // Se a próxima atividade tiver o mesmo horário, a duração é 0 (ou seja, começa "imediatamente" junto)
-                // Se não houver próxima atividade, assume uma duração padrão (ex: 60 minutos)
-                if (index < program.length - 1) {
-                    const [itemHour, itemMinute] = item.time.split(':').map(Number);
-                    const itemTimeInMinutes = itemHour * 60 + itemMinute;
-
-                    let nextIndex = index + 1;
-                    while (program[nextIndex] && program[nextIndex].time === item.time) {
-                        nextIndex++; // Pula para a próxima atividade com horário diferente
-                    }
-
-                    if (program[nextIndex]) {
-                        const [nextItemHour, nextItemMinute] = program[nextIndex].time.split(':').map(Number);
-                        const nextItemTimeInMinutes = nextItemHour * 60 + nextItemMinute;
-                        return Math.max(0, nextItemTimeInMinutes - itemTimeInMinutes); // Garante que a duração não seja negativa
-                    }
-                }
-                return 60; // Duração padrão se for a última atividade ou não houver próxima com horário diferente
-            }
-
             renderProgram();
-            setInterval(updateProgramStatus, 1000); // Atualiza a cada segundo
-            updateProgramStatus(); // Chama uma vez ao carregar para exibir o estado inicial
+            setInterval(updateProgramStatus, 1000);
+            updateProgramStatus();
         });
     </script>
+
 </body>
 
 </html>

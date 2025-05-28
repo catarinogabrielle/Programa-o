@@ -22,6 +22,7 @@
             --bg-gradient-end: #a5e1cd;
             --shadow-light: rgba(0, 0, 0, 0.08);
             --shadow-heavy: rgba(0, 0, 0, 0.2);
+            --alert-color: #ce0000;
         }
 
         body.dark-mode {
@@ -37,6 +38,7 @@
             --shadow-light: rgba(255, 255, 255, 0.05);
             --shadow-heavy: rgba(255, 255, 255, 0.15);
             color: var(--text-dark);
+            --alert-color: #ff6868;
         }
 
         body {
@@ -690,7 +692,8 @@
                 <p id="next-activity">Carregando...</p>
                 <p id="next-time-slot"></p>
                 <p id="countdown-next-activity"
-                    style="font-weight: 600; color: var(--secondary-color); margin-top: 10px;"></p>
+                    style="font-weight: 600; font-size: 19px; color: var(--alert-color); margin-top: 10px;">
+                </p>
             </div>
         </div>
         <div id="program-list">

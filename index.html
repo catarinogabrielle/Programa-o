@@ -689,6 +689,8 @@
                 <h2>A Seguir:</h2>
                 <p id="next-activity">Carregando...</p>
                 <p id="next-time-slot"></p>
+                <p id="countdown-next-activity"
+                    style="font-weight: 600; color: var(--secondary-color); margin-top: 10px;"></p>
             </div>
         </div>
         <div id="program-list">
@@ -745,6 +747,7 @@
             const nextTimeSlotElem = document.getElementById('next-time-slot');
             const currentTimeDisplay = document.getElementById('current-time-display');
             const loadingIndicatorProgram = document.getElementById('loadingIndicatorProgram');
+            const countdownNextActivity = document.getElementById('countdown-next-activity'); // Novo elemento
 
             const alarmModal = document.getElementById('alarmModal');
             const modalEventActivity = document.getElementById('modal-event-activity');
@@ -871,6 +874,7 @@
                     if (currentTimeSlotElem) currentTimeSlotElem.textContent = "";
                     if (nextActivityElem) nextActivityElem.textContent = "Nenhuma programação.";
                     if (nextTimeSlotElem) nextTimeSlotElem.textContent = "";
+                    if (countdownNextActivity) countdownNextActivity.textContent = "";
                     const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     if (currentTimeDisplay) currentTimeDisplay.textContent = `Hora Atual: ${nowTime}`;
                     return;
@@ -879,7 +883,9 @@
                 const now = new Date();
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
+                const currentSecond = now.getSeconds();
                 const currentTimeInMinutesToday = currentHour * 60 + currentMinute;
+                const currentTimeInSecondsToday = currentHour * 3600 + currentMinute * 60 + currentSecond;
 
                 let currentEvent = null;
                 let nextEvent = null;
@@ -891,6 +897,7 @@
                     const item = program[i];
                     const [itemHour, itemMinute] = item.time.split(':').map(Number);
                     const itemStartTimeInMinutes = itemHour * 60 + itemMinute;
+                    const itemStartTimeInSeconds = itemHour * 3600 + itemMinute * 60;
 
                     let itemEndTimeInMinutes;
                     if (i < program.length - 1) {
@@ -914,8 +921,10 @@
                         if (rowElement) rowElement.classList.add('active');
                     }
 
-                    if (!nextEvent && itemStartTimeInMinutes > currentTimeInMinutesToday) {
-                        nextEvent = item;
+                    if (itemStartTimeInMinutes > currentTimeInMinutesToday) {
+                        if (!nextEvent || itemStartTimeInMinutes < (nextEvent.time.split(':').map(Number)[0] * 60 + nextEvent.time.split(':').map(Number)[1])) {
+                            nextEvent = item;
+                        }
                     }
 
                     if (!item.alarmTriggered) {
@@ -928,33 +937,6 @@
                     }
                 }
 
-                if (nextEvent) {
-                    const nextEventRowElement = Array.from(tableRows).find(row => row.dataset.originalId === nextEvent.id);
-                    if (nextEventRowElement) {
-                        nextEventRowElement.classList.add('upcoming');
-                    }
-                }
-
-                if (!currentEvent && program.length > 0) {
-                    if (nextEvent) {
-                        const firstRowElement = Array.from(tableRows).find(row => row.dataset.originalId === nextEvent.id);
-                        if (firstRowElement) {
-                            firstRowElement.classList.add('upcoming');
-                        }
-                    } else {
-                        currentActivityElem.textContent = "Nenhuma atividade no momento.";
-                        currentTimeSlotElem.textContent = "";
-                        nextActivityElem.textContent = "Fim da programação.";
-                        nextTimeSlotElem.textContent = "";
-                    }
-                } else if (currentEvent && !nextEvent) {
-                    nextActivityElem.textContent = "Fim da programação.";
-                    nextTimeSlotElem.textContent = "";
-                } else if (currentEvent && nextEvent && program.indexOf(currentEvent) === program.length - 1) {
-                    nextActivityElem.textContent = "Fim da programação.";
-                    nextTimeSlotElem.textContent = "";
-                }
-
                 if (currentEvent) {
                     currentActivityElem.textContent = currentEvent.activity;
                     currentTimeSlotElem.textContent = `(${currentEvent.time} - ${currentEvent.location})`;
@@ -964,17 +946,31 @@
                 }
 
                 if (nextEvent) {
-                    if (currentEvent && currentEvent.id === nextEvent.id && program.indexOf(currentEvent) === program.length - 1) {
-                        nextActivityElem.textContent = "Fim da programação.";
-                        nextTimeSlotElem.textContent = "";
+                    nextActivityElem.textContent = nextEvent.activity;
+                    nextTimeSlotElem.textContent = `(${nextEvent.time} - ${nextEvent.location})`;
+
+                    const nextEventStartTimeInSeconds = (nextEvent.time.split(':').map(Number)[0] * 3600) + (nextEvent.time.split(':').map(Number)[1] * 60);
+                    let timeDiffSeconds = nextEventStartTimeInSeconds - currentTimeInSecondsToday;
+
+                    if (timeDiffSeconds > 0) {
+                        const minutes = Math.floor(timeDiffSeconds / 60);
+                        const seconds = timeDiffSeconds % 60;
+                        countdownNextActivity.textContent = `Começa em: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
                     } else {
-                        nextActivityElem.textContent = nextEvent.activity;
-                        nextTimeSlotElem.textContent = `(${nextEvent.time} - ${nextEvent.location})`;
+                        countdownNextActivity.textContent = "Evento começou!";
                     }
+
+                    const nextEventRowElement = Array.from(tableRows).find(row => row.dataset.originalId === nextEvent.id);
+                    if (nextEventRowElement) {
+                        nextEventRowElement.classList.add('upcoming');
+                    }
+
                 } else {
                     nextActivityElem.textContent = "Fim da programação.";
                     nextTimeSlotElem.textContent = "";
+                    countdownNextActivity.textContent = "";
                 }
+
                 currentTimeDisplay.textContent = `Hora Atual: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             }
 
@@ -999,7 +995,6 @@
             initializePage();
         });
     </script>
-
 </body>
 
 </html>

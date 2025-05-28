@@ -53,15 +53,15 @@
 
         .header-logo {
             text-align: center;
+            margin-bottom: 20px;
         }
 
         .header-logo img {
-            max-width: 250px;
+            max-width: 200px;
             height: auto;
-            margin-bottom: 10px;
+            margin-bottom: 0px;
             filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.486));
         }
-
 
         @keyframes fadeIn {
             from {
@@ -85,14 +85,15 @@
         }
 
         h1 {
-            font-size: 45px;
+            font-size: 42px;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
             margin-top: 0;
+            margin-bottom: 20px;
         }
 
         h2 {
-            font-size: 32px;
-            margin-top: 35px;
+            font-size: 30px;
+            margin-top: 30px;
             position: relative;
         }
 
@@ -108,8 +109,8 @@
 
         #current-time-display {
             text-align: center;
-            font-size: 26px;
-            margin: 0px auto 35px auto;
+            font-size: 24px;
+            margin: 0px auto 30px auto;
             font-weight: 600;
             color: var(--secondary-color);
             background-color: #f0f8ff;
@@ -122,14 +123,14 @@
 
         #now-next {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
 
         .card {
             background-color: var(--bg-light);
-            padding: 25px;
+            padding: 20px;
             border-radius: 12px;
             box-shadow: 0px 6px 15px var(--shadow-light);
             text-align: center;
@@ -174,16 +175,16 @@
         .card h2 {
             margin-top: 0px;
             color: var(--primary-color);
-            font-size: 26px;
+            font-size: 24px;
             margin-bottom: 10px;
             font-weight: 600;
         }
 
         .card p {
             margin: 8px 0px;
-            font-size: 18px;
+            font-size: 17px;
             color: #555555;
-            line-height: 24px;
+            line-height: 1.5;
         }
 
         #program-list table {
@@ -329,6 +330,17 @@
             background-color: var(--secondary-color);
         }
 
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .loading-indicator.active {
+            display: block;
+        }
 
         @media (max-width: 768px) {
             body {
@@ -338,47 +350,37 @@
 
             .container {
                 padding: 25px;
-                border-radius: 10px;
-                box-shadow: 0px 10px 20px var(--shadow-heavy);
                 margin: 15px auto;
             }
 
             .header-logo img {
-                max-width: 180px;
+                max-width: 160px;
             }
 
             h1 {
-                font-size: 35px;
-                margin-bottom: 20px;
+                font-size: 32px;
             }
 
             h2 {
-                font-size: 27px;
-                margin-top: 25px;
-                margin-bottom: 15px;
+                font-size: 25px;
             }
 
             h2::after {
-                width: 40px;
-                height: 2px;
+                width: 50px;
             }
 
             #current-time-display {
-                font-size: 22px;
-                margin-bottom: 25px;
-                padding: 8px 15px;
+                font-size: 20px;
             }
 
             #now-next {
                 grid-template-columns: 1fr;
                 gap: 20px;
-                margin-bottom: 40px;
+                margin-bottom: 30px;
             }
 
             .card {
-                padding: 20px;
-                border-radius: 10px;
-                box-shadow: 0px 4px 10px var(--shadow-light);
+                padding: 18px;
             }
 
             .card h2 {
@@ -387,18 +389,6 @@
 
             .card p {
                 font-size: 16px;
-            }
-
-            #program-list table {
-                border-radius: 8px;
-            }
-
-            #program-list thead th:first-child {
-                border-top-left-radius: 8px;
-            }
-
-            #program-list thead th:last-child {
-                border-top-right-radius: 8px;
             }
 
             #program-list th,
@@ -427,19 +417,20 @@
             }
 
             .header-logo img {
-                max-width: 150px;
+                max-width: 130px;
             }
 
             h1 {
-                font-size: 29px;
+                font-size: 26px;
             }
 
             h2 {
-                font-size: 22px;
+                font-size: 20px;
             }
 
             #current-time-display {
-                font-size: 18px;
+                font-size: 17px;
+                padding: 8px 15px;
             }
 
             #program-list th,
@@ -452,7 +443,6 @@
             #program-list th:nth-child(3) {
                 display: none;
             }
-
 
             .modal-content {
                 padding: 20px;
@@ -472,11 +462,11 @@
 <body>
     <div class="container">
         <div class="header-logo">
-            <img src="img/logo.png" alt="Logo da Minha Empresa">
+            <img src="img/logo.png" alt="Logo do Evento">
         </div>
 
         <h1>Programação do Evento</h1>
-        <div id="current-time-display"></div>
+        <div id="current-time-display">Carregando hora...</div>
         <div id="now-next">
             <div class="card current">
                 <h2>Agora:</h2>
@@ -491,6 +481,7 @@
         </div>
         <div id="program-list">
             <h2>Programação Completa</h2>
+            <div class="loading-indicator" id="loadingIndicatorProgram">Carregando programação...</div>
             <table>
                 <thead>
                     <tr>
@@ -516,14 +507,32 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8EGMHVUVTrNWY2wai3YmXE1ZrlZ6Gz6o",
+            authDomain: "programacao-9b5ff.firebaseapp.com",
+            projectId: "programacao-9b5ff",
+            storageBucket: "programacao-9b5ff.appspot.com",
+            messagingSenderId: "454543714542",
+            appId: "1:454543714542:web:0d57bf8de021d5e79e6bff",
+            measurementId: "G-NMHH7J7Z58"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const programCollectionRef = collection(db, 'eventProgram');
+
+        document.addEventListener('DOMContentLoaded', async () => {
             const programBody = document.getElementById('program-body');
             const currentActivityElem = document.getElementById('current-activity');
             const currentTimeSlotElem = document.getElementById('current-time-slot');
             const nextActivityElem = document.getElementById('next-activity');
             const nextTimeSlotElem = document.getElementById('next-time-slot');
             const currentTimeDisplay = document.getElementById('current-time-display');
+            const loadingIndicatorProgram = document.getElementById('loadingIndicatorProgram');
 
             const alarmModal = document.getElementById('alarmModal');
             const modalEventActivity = document.getElementById('modal-event-activity');
@@ -531,37 +540,65 @@
             const modalEventLocation = document.getElementById('modal-event-location');
             const modalCloseBtn = document.getElementById('modalCloseBtn');
 
-            function loadProgramFromLocalStorage() {
-                const storedProgram = localStorage.getItem('eventProgram');
-                if (storedProgram) {
-                    const parsedProgram = JSON.parse(storedProgram);
-                    return parsedProgram.map(item => ({
-                        ...item,
-                        alarmTriggered: typeof item.alarmTriggered === 'boolean' ? item.alarmTriggered : false
-                    }));
+            let program = [];
+            const alarmSound = new Audio('alarme.mp3');
+
+            async function loadProgramFromFirestore() {
+                if (loadingIndicatorProgram) loadingIndicatorProgram.classList.add('active');
+                programBody.innerHTML = '';
+                try {
+                    const q = query(programCollectionRef, orderBy("time"));
+                    const querySnapshot = await getDocs(q);
+
+                    if (querySnapshot.empty) {
+                        console.log('Nenhum item na programação encontrado no Firestore.');
+                        programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhuma programação disponível no momento.</td></tr>';
+                        return [];
+                    }
+
+                    let programData = [];
+                    querySnapshot.forEach((doc) => {
+                        programData.push({ id: doc.id, ...doc.data(), alarmTriggered: false });
+                    });
+                    console.log("Programação carregada do Firestore:", programData);
+                    return programData;
+
+                } catch (error) {
+                    console.error("Erro ao carregar programação do Firestore: ", error);
+                    programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Erro ao carregar programação. Tente novamente mais tarde.</td></tr>';
+                    return [];
+                } finally {
+                    if (loadingIndicatorProgram) loadingIndicatorProgram.classList.remove('active');
                 }
             }
 
-            let program = loadProgramFromLocalStorage();
-
-            const alarmSound = new Audio('alarme.mp3');
 
             function renderProgram() {
                 programBody.innerHTML = '';
-                program.sort((a, b) => {
+                if (!program || program.length === 0) {
+                    if (!loadingIndicatorProgram || !loadingIndicatorProgram.classList.contains('active')) {
+                        programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhuma programação para exibir.</td></tr>';
+                    }
+                    return;
+                }
+
+                const sortedProgram = [...program].sort((a, b) => {
                     const [ha, ma] = a.time.split(':').map(Number);
                     const [hb, mb] = b.time.split(':').map(Number);
                     return (ha * 60 + ma) - (hb * 60 + mb);
                 });
 
-                program.forEach((item, index) => {
+                sortedProgram.forEach((item, index) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${item.time}</td>
                         <td>${item.activity}</td>
                         <td>${item.location}</td>
                     `;
-                    row.dataset.index = index;
+
+                    row.dataset.originalId = item.id;
+                    row.dataset.arrayIndex = program.findIndex(pItem => pItem.id === item.id);
+
                     programBody.appendChild(row);
                 });
             }
@@ -573,45 +610,52 @@
                 alarmModal.style.display = 'flex';
 
                 alarmSound.play()
-                    .then(() => {
-                        // console.log(`Alarme tocando para: ${eventItem.activity}`); // Descomente para depuração
-                    })
+                    .then(() => { console.log(`Alarme tocando para: ${eventItem.activity}`); })
                     .catch(error => {
                         console.error("Erro ao tocar o som do alarme:", error);
-                        console.warn("Possível causa: O navegador bloqueou a reprodução automática de áudio. É necessário uma interação do usuário com a página para ativá-lo.");
+                        console.warn("Possível causa: Bloqueio de autoplay. Interaja com a página.");
                     });
             }
 
-            modalCloseBtn.addEventListener('click', () => {
-                alarmModal.style.display = 'none';
-                alarmSound.pause();
-                alarmSound.currentTime = 0;
-            });
+            if (modalCloseBtn) {
+                modalCloseBtn.addEventListener('click', () => {
+                    alarmModal.style.display = 'none';
+                    alarmSound.pause();
+                    alarmSound.currentTime = 0;
+                });
+            }
 
             function updateProgramStatus() {
+                if (!program || program.length === 0) {
+                    currentActivityElem.textContent = "Nenhuma atividade.";
+                    currentTimeSlotElem.textContent = "";
+                    nextActivityElem.textContent = "Nenhuma atividade.";
+                    nextTimeSlotElem.textContent = "";
+                    currentTimeDisplay.textContent = `Hora Atual: ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+                    return;
+                }
+
                 const now = new Date();
-                const currentTime = now.getHours() * 60 + now.getMinutes();
+                const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
 
-                let currentActivity = null;
-                let nextActivity = null;
+                let currentActivityItem = null;
+                let nextActivityItem = null;
                 let foundCurrent = false;
-                let foundNext = false;
 
-                document.querySelectorAll('#program-body tr').forEach(row => {
+                const tableRows = programBody.querySelectorAll('tr');
+
+                tableRows.forEach(row => {
                     row.classList.remove('active', 'upcoming');
                 });
-
-                let activeActivities = [];
 
                 program.forEach((item, index) => {
                     const [itemHour, itemMinute] = item.time.split(':').map(Number);
                     const itemTimeInMinutes = itemHour * 60 + itemMinute;
                     const alarmTimeInMinutes = itemTimeInMinutes - 10;
 
-                    if (!item.alarmTriggered && currentTime >= alarmTimeInMinutes && currentTime < itemTimeInMinutes) {
+                    if (!item.alarmTriggered && currentTimeInMinutes >= alarmTimeInMinutes && currentTimeInMinutes < itemTimeInMinutes) {
                         showAlarmModal(item);
                         item.alarmTriggered = true;
-                        localStorage.setItem('eventProgram', JSON.stringify(program));
                     }
 
                     let duration = 60;
@@ -625,54 +669,46 @@
                             break;
                         }
                     }
-
                     if (nextDistinctActivityTime !== Infinity) {
                         duration = nextDistinctActivityTime - itemTimeInMinutes;
-                    } else if (index < program.length - 1) {
-                        // Se não houver atividade posterior com horário diferente, mas não for a última,
-                        // pode significar que as próximas são no mesmo horário.
-                        // Neste caso, a duração pode ser um valor padrão ou até o fim do evento se for a última "sequência".
-                        // Se for a última, duração já é 60.
                     }
 
-
-                    const rowElement = document.querySelector(`#program-body tr[data-index="${index}"]`);
-
-                    if (currentTime >= itemTimeInMinutes && currentTime < (itemTimeInMinutes + duration)) {
-                        if (rowElement) rowElement.classList.add('active');
-                        activeActivities.push(item);
-                        foundCurrent = true;
-                    }
-
-                    else if (itemTimeInMinutes > currentTime) {
-                        if (!foundNext) {
-                            nextActivity = item;
-                            foundNext = true;
+                    if (currentTimeInMinutes >= itemTimeInMinutes && currentTimeInMinutes < (itemTimeInMinutes + duration)) {
+                        if (!foundCurrent) {
+                            currentActivityItem = item;
+                            foundCurrent = true;
                         }
+
+                        const rowElement = Array.from(tableRows).find(row => row.dataset.originalId === item.id);
+                        if (rowElement) rowElement.classList.add('active');
+
+                    } else if (itemTimeInMinutes > currentTimeInMinutes) {
+                        if (!nextActivityItem) {
+                            nextActivityItem = item;
+                        }
+
+                        const rowElement = Array.from(tableRows).find(row => row.dataset.originalId === item.id);
                         if (rowElement) rowElement.classList.add('upcoming');
                     }
                 });
 
-                if (activeActivities.length > 0) {
-                    currentActivityElem.textContent = activeActivities.map(act => act.activity).join(' / ');
-                    currentTimeSlotElem.textContent = `(${activeActivities[0].time} - ${activeActivities.map(act => act.location).join(' / ')})`;
-                } else if (currentTime < program[0].time.split(':').map(Number)[0] * 60 + program[0].time.split(':').map(Number)[1]) {
+                if (currentActivityItem) {
+                    currentActivityElem.textContent = currentActivityItem.activity;
+                    currentTimeSlotElem.textContent = `(${currentActivityItem.time} - ${currentActivityItem.location})`;
+                } else if (program.length > 0 && currentTimeInMinutes < (program[0].time.split(':')[0] * 60 + parseInt(program[0].time.split(':')[1]))) {
                     currentActivityElem.textContent = "O evento ainda não começou.";
                     currentTimeSlotElem.textContent = `Início às ${program[0].time}`;
-                } else if (foundCurrent) {
-                    currentActivityElem.textContent = "Verificando...";
-                    currentTimeSlotElem.textContent = "";
                 }
                 else {
                     currentActivityElem.textContent = "Nenhuma atividade no momento.";
                     currentTimeSlotElem.textContent = "";
                 }
 
-                if (nextActivity) {
-                    nextActivityElem.textContent = nextActivity.activity;
-                    nextTimeSlotElem.textContent = `(${nextActivity.time} - ${nextActivity.location})`;
+                if (nextActivityItem) {
+                    nextActivityElem.textContent = nextActivityItem.activity;
+                    nextTimeSlotElem.textContent = `(${nextActivityItem.time} - ${nextActivityItem.location})`;
                 } else {
-                    if (foundCurrent || currentTime >= program[program.length - 1].time.split(':').map(Number)[0] * 60 + program[program.length - 1].time.split(':').map(Number)[1]) {
+                    if (foundCurrent || (program.length > 0 && currentTimeInMinutes >= (program[program.length - 1].time.split(':')[0] * 60 + parseInt(program[program.length - 1].time.split(':')[1])))) {
                         nextActivityElem.textContent = "Fim da programação.";
                         nextTimeSlotElem.textContent = "";
                     } else {
@@ -684,12 +720,16 @@
                 currentTimeDisplay.textContent = `Hora Atual: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             }
 
-            renderProgram();
-            setInterval(updateProgramStatus, 1000);
-            updateProgramStatus();
+            async function initializePage() {
+                program = await loadProgramFromFirestore();
+                renderProgram();
+                updateProgramStatus();
+                setInterval(updateProgramStatus, 10000);
+            }
+
+            initializePage();
         });
     </script>
-
 </body>
 
 </html>

@@ -187,7 +187,6 @@
             white-space: normal;
         }
 
-
         .program-table-section thead {
             background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
             color: var(--text-light);
@@ -258,6 +257,18 @@
             }
         }
 
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .loading-indicator.active {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .admin-container {
                 padding: 20px;
@@ -318,7 +329,7 @@
             .program-table-section td:nth-child(2),
             .program-table-section td:nth-child(3) {
                 white-space: normal;
-                min-width: 150px;
+                min-width: 120px;
             }
 
             .program-table-section td:nth-child(1),
@@ -326,21 +337,28 @@
                 white-space: nowrap;
             }
 
-
             .action-buttons {
                 flex-direction: column;
+                align-items: flex-start;
             }
 
             .action-buttons button {
-                padding: 6px 8px;
+                padding: 8px 10px;
                 font-size: 13px;
+                width: 100%;
+                box-sizing: border-box;
+                margin-bottom: 5px;
+            }
+
+            .action-buttons button:last-child {
+                margin-bottom: 0;
             }
         }
 
         @media (max-width: 480px) {
             .admin-container {
                 padding: 15px;
-                width: 85%;
+                width: 95%;
             }
 
             .admin-header h1 {
@@ -351,7 +369,6 @@
                 padding: 10px 20px;
                 font-size: 15px;
             }
-
 
             .form-section h2,
             .program-table-section h2 {
@@ -364,20 +381,24 @@
                 padding: 8px 10px;
             }
 
+            .program-table-section td:nth-child(2),
+            .program-table-section td:nth-child(3) {
+                min-width: 100px;
+            }
+
             .action-buttons {
                 gap: 3px;
             }
 
             .action-buttons button {
                 font-size: 12px;
-                padding: 5px 7px;
+                padding: 6px 8px;
             }
         }
     </style>
 </head>
 
 <body>
-
     <div class="admin-container">
         <div class="admin-header">
             <h1>Dashboard Programação</h1>
@@ -387,7 +408,7 @@
         <div class="form-section">
             <h2>Adicionar/Editar Atividade</h2>
             <form id="activityForm">
-                <input type="hidden" id="activityIndex">
+                <input type="hidden" id="activityDocId">
                 <div class="form-group">
                     <label for="activityTime">Horário:</label>
                     <input type="time" id="activityTime" required>
@@ -409,6 +430,7 @@
 
         <div class="program-table-section">
             <h2>Programação Atual</h2>
+            <div class="loading-indicator" id="loadingIndicator">Carregando programação...</div>
             <div class="table-responsive-wrapper">
                 <table>
                     <thead>
@@ -426,25 +448,46 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+
+        // Importações do Firestore
+        import {
+            getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy
+        } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8EGMHVUVTrNWY2wai3YmXE1ZrlZ6Gz6o",
+            authDomain: "programacao-9b5ff.firebaseapp.com",
+            databaseURL: "https://programacao-9b5ff-default-rtdb.firebaseio.com",
+            projectId: "programacao-9b5ff",
+            storageBucket: "programacao-9b5ff.firebasestorage.app",
+            messagingSenderId: "454543714542",
+            appId: "1:454543714542:web:0d57bf8de021d5e79e6bff",
+            measurementId: "G-NMHH7J7Z58"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const programCollectionRef = collection(db, 'eventProgram');
+
         document.addEventListener('DOMContentLoaded', () => {
             const logoutBtn = document.getElementById('logoutBtn');
             const activityForm = document.getElementById('activityForm');
-            const activityIndexInput = document.getElementById('activityIndex');
+            const activityDocIdInput = document.getElementById('activityDocId');
             const activityTimeInput = document.getElementById('activityTime');
             const activityNameInput = document.getElementById('activityName');
             const activityLocationInput = document.getElementById('activityLocation');
             const saveActivityBtn = document.getElementById('saveActivityBtn');
             const clearFormBtn = document.getElementById('clearFormBtn');
             const adminProgramBody = document.getElementById('adminProgramBody');
+            const loadingIndicator = document.getElementById('loadingIndicator');
 
-            // Autenticação (simplificada)
             if (localStorage.getItem('loggedIn') !== 'true') {
                 alert("Você não está logado. Redirecionando para login...");
                 window.location.href = 'login.html';
                 return;
             }
-
 
             logoutBtn.addEventListener('click', () => {
                 localStorage.removeItem('loggedIn');
@@ -452,101 +495,164 @@
                 window.location.href = 'login.html';
             });
 
-            function loadProgram() {
-                const storedProgram = localStorage.getItem('eventProgram');
-                return storedProgram ? JSON.parse(storedProgram) : [
-                    { time: "09:00", activity: "Abertura do Evento e Boas-Vindas", location: "Auditório Principal" },
-                ];
-            }
-
-            let program = loadProgram();
-
-            function saveProgram() {
-                const programToSave = program.map(item => {
-                    const { alarmTriggered, ...rest } = item;
-                    return rest;
-                });
-                localStorage.setItem('eventProgram', JSON.stringify(programToSave));
-            }
-
-            function renderAdminProgram() {
+            async function loadProgramFromFirestore() {
+                loadingIndicator.classList.add('active');
                 adminProgramBody.innerHTML = '';
-                program.sort((a, b) => {
+                try {
+                    const q = query(programCollectionRef, orderBy("time"));
+                    const querySnapshot = await getDocs(q);
+
+                    if (querySnapshot.empty) {
+                        console.log('Nenhum item na programação encontrado no Firestore.');
+                        adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>';
+                        return [];
+                    }
+                    let programData = [];
+                    querySnapshot.forEach((doc) => {
+                        programData.push({ id: doc.id, ...doc.data() });
+                    });
+                    return programData;
+                } catch (error) {
+                    console.error("Erro ao carregar programação do Firestore: ", error);
+                    adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Erro ao carregar programação. Verifique o console.</td></tr>';
+                    return [];
+                } finally {
+                    loadingIndicator.classList.remove('active');
+                }
+            }
+
+            let program = [];
+
+            async function renderAdminProgram() {
+                adminProgramBody.innerHTML = '';
+                if (!program || program.length === 0) {
+                    if (!loadingIndicator.classList.contains('active')) {
+                        adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>';
+                    }
+                    return;
+                }
+
+                const sortedProgram = [...program].sort((a, b) => {
                     const [ha, ma] = a.time.split(':').map(Number);
                     const [hb, mb] = b.time.split(':').map(Number);
                     return (ha * 60 + ma) - (hb * 60 + mb);
                 });
 
-                program.forEach((item, index) => {
+                sortedProgram.forEach(item => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${item.time}</td>
                         <td>${item.activity}</td>
                         <td>${item.location}</td>
                         <td class="action-buttons">
-                            <button class="edit-btn" data-index="${index}" title="Editar Atividade">Editar</button>
-                            <button class="delete-btn" data-index="${index}" title="Excluir Atividade">Excluir</button>
+                            <button class="edit-btn" data-id="${item.id}" title="Editar Atividade">Editar</button>
+                            <button class="delete-btn" data-id="${item.id}" title="Excluir Atividade">Excluir</button>
                         </td>
                     `;
                     adminProgramBody.appendChild(row);
                 });
             }
 
-            activityForm.addEventListener('submit', (e) => {
+            activityForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const originalButtonText = saveActivityBtn.textContent;
+                saveActivityBtn.disabled = true;
+                saveActivityBtn.textContent = 'Salvando...';
+
                 const time = activityTimeInput.value;
                 const activity = activityNameInput.value;
                 const location = activityLocationInput.value;
-                const index = activityIndexInput.value;
+                const docIdValue = activityDocIdInput.value;
 
                 if (!time || !activity || !location) {
                     alert("Por favor, preencha todos os campos!");
+                    saveActivityBtn.disabled = false;
+                    saveActivityBtn.textContent = originalButtonText;
                     return;
                 }
 
-                if (index === '') {
-                    program.push({ time, activity, location });
-                } else {
-                    program[parseInt(index)] = { time, activity, location };
-                }
+                const activityData = { time, activity, location };
 
-                saveProgram();
-                renderAdminProgram();
-                clearForm();
+                try {
+                    if (docIdValue === '') {
+                        await addDoc(programCollectionRef, activityData);
+                        console.log("Atividade adicionada com sucesso!");
+                    } else {
+                        const docRef = doc(db, "eventProgram", docIdValue);
+                        await updateDoc(docRef, activityData);
+                        console.log("Atividade atualizada com sucesso!");
+                    }
+                    program = await loadProgramFromFirestore();
+                    renderAdminProgram();
+                    clearForm();
+                } catch (error) {
+                    console.error("Erro ao salvar atividade: ", error);
+                    alert("Erro ao salvar atividade. Verifique o console (F12).");
+                } finally {
+                    saveActivityBtn.disabled = false;
+                    if (activityDocIdInput.value === '') {
+                        saveActivityBtn.textContent = 'Adicionar Atividade';
+                    } else {
+                        saveActivityBtn.textContent = 'Salvar Edição';
+                    }
+                }
             });
 
             clearFormBtn.addEventListener('click', clearForm);
 
             function clearForm() {
                 activityForm.reset();
-                activityIndexInput.value = '';
+                activityDocIdInput.value = '';
                 saveActivityBtn.textContent = 'Adicionar Atividade';
                 activityTimeInput.focus();
             }
 
-            adminProgramBody.addEventListener('click', (e) => {
-                if (e.target.classList.contains('edit-btn')) {
-                    const index = parseInt(e.target.dataset.index);
-                    const itemToEdit = program[index];
+            adminProgramBody.addEventListener('click', async (e) => {
+                const targetButton = e.target.closest('button');
+                if (!targetButton) return;
 
-                    activityTimeInput.value = itemToEdit.time;
-                    activityNameInput.value = itemToEdit.activity;
-                    activityLocationInput.value = itemToEdit.location;
-                    activityIndexInput.value = index;
-                    saveActivityBtn.textContent = 'Salvar Edição';
-                    activityTimeInput.focus();
-                } else if (e.target.classList.contains('delete-btn')) {
-                    const index = parseInt(e.target.dataset.index);
-                    if (confirm(`Tem certeza que deseja excluir "${program[index].activity}"?`)) {
-                        program.splice(index, 1);
-                        saveProgram();
-                        renderAdminProgram();
-                        clearForm();
+                const docIdValue = targetButton.dataset.id;
+
+                if (targetButton.classList.contains('edit-btn')) {
+                    const itemToEdit = program.find(item => item.id === docIdValue);
+                    if (itemToEdit) {
+                        activityTimeInput.value = itemToEdit.time;
+                        activityNameInput.value = itemToEdit.activity;
+                        activityLocationInput.value = itemToEdit.location;
+                        activityDocIdInput.value = docIdValue;
+                        saveActivityBtn.textContent = 'Salvar Edição';
+                        activityTimeInput.focus();
+                    }
+                } else if (targetButton.classList.contains('delete-btn')) {
+                    const itemToDelete = program.find(item => item.id === docIdValue);
+                    if (itemToDelete && confirm(`Tem certeza que deseja excluir "${itemToDelete.activity}"?`)) {
+                        targetButton.disabled = true;
+                        targetButton.textContent = 'Excluindo...';
+                        try {
+                            const docRef = doc(db, "eventProgram", docIdValue);
+                            await deleteDoc(docRef);
+                            console.log("Atividade excluída com sucesso!");
+                            program = await loadProgramFromFirestore();
+                            renderAdminProgram();
+                            if (activityDocIdInput.value === docIdValue) {
+                                clearForm();
+                            }
+                        } catch (error) {
+                            console.error("Erro ao excluir atividade: ", error);
+                            alert("Erro ao excluir atividade. Verifique o console (F12).");
+                            targetButton.disabled = false;
+                            targetButton.textContent = 'Excluir';
+                        }
                     }
                 }
             });
 
-            renderAdminProgram();
+            async function initializeAdminPage() {
+                program = await loadProgramFromFirestore();
+                renderAdminProgram();
+            }
+
+            initializeAdminPage();
         });
     </script>
 </body>

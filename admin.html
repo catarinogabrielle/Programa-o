@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin da Programação</title>
+    <title>Admin da Programação - Firebase</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="img/icon.png">
     <link rel="shortcut icon" href="img/icon.png" type="image/x-icon">
@@ -186,6 +186,7 @@
         .program-table-section td:nth-child(3) {
             white-space: normal;
         }
+
 
         .program-table-section thead {
             background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
@@ -450,18 +451,13 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-
-        // Importações do Firestore
-        import {
-            getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy
-        } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8EGMHVUVTrNWY2wai3YmXE1ZrlZ6Gz6o",
             authDomain: "programacao-9b5ff.firebaseapp.com",
-            databaseURL: "https://programacao-9b5ff-default-rtdb.firebaseio.com",
             projectId: "programacao-9b5ff",
-            storageBucket: "programacao-9b5ff.firebasestorage.app",
+            storageBucket: "programacao-9b5ff.appspot.com",
             messagingSenderId: "454543714542",
             appId: "1:454543714542:web:0d57bf8de021d5e79e6bff",
             measurementId: "G-NMHH7J7Z58"
@@ -483,6 +479,9 @@
             const adminProgramBody = document.getElementById('adminProgramBody');
             const loadingIndicator = document.getElementById('loadingIndicator');
 
+            let program = [];
+            let refreshAdminIntervalId = null;
+
             if (localStorage.getItem('loggedIn') !== 'true') {
                 alert("Você não está logado. Redirecionando para login...");
                 window.location.href = 'login.html';
@@ -496,37 +495,33 @@
             });
 
             async function loadProgramFromFirestore() {
-                loadingIndicator.classList.add('active');
-                adminProgramBody.innerHTML = '';
+                if (loadingIndicator && !adminProgramBody.querySelector('tr')) {
+                    loadingIndicator.classList.add('active');
+                }
                 try {
                     const q = query(programCollectionRef, orderBy("time"));
                     const querySnapshot = await getDocs(q);
-
-                    if (querySnapshot.empty) {
-                        console.log('Nenhum item na programação encontrado no Firestore.');
-                        adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>';
-                        return [];
-                    }
                     let programData = [];
-                    querySnapshot.forEach((doc) => {
-                        programData.push({ id: doc.id, ...doc.data() });
-                    });
+                    if (!querySnapshot.empty) {
+                        querySnapshot.forEach((doc) => {
+                            programData.push({ id: doc.id, ...doc.data() });
+                        });
+                    }
                     return programData;
                 } catch (error) {
                     console.error("Erro ao carregar programação do Firestore: ", error);
-                    adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Erro ao carregar programação. Verifique o console.</td></tr>';
+                    if (adminProgramBody) adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Erro ao carregar programação.</td></tr>';
                     return [];
                 } finally {
-                    loadingIndicator.classList.remove('active');
+                    if (loadingIndicator) loadingIndicator.classList.remove('active');
                 }
             }
 
-            let program = [];
-
-            async function renderAdminProgram() {
+            function renderAdminProgram() {
+                if (!adminProgramBody) return;
                 adminProgramBody.innerHTML = '';
                 if (!program || program.length === 0) {
-                    if (!loadingIndicator.classList.contains('active')) {
+                    if (!loadingIndicator || !loadingIndicator.classList.contains('active')) {
                         adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>';
                     }
                     return;
@@ -576,11 +571,9 @@
                 try {
                     if (docIdValue === '') {
                         await addDoc(programCollectionRef, activityData);
-                        console.log("Atividade adicionada com sucesso!");
                     } else {
                         const docRef = doc(db, "eventProgram", docIdValue);
                         await updateDoc(docRef, activityData);
-                        console.log("Atividade atualizada com sucesso!");
                     }
                     program = await loadProgramFromFirestore();
                     renderAdminProgram();
@@ -610,7 +603,6 @@
             adminProgramBody.addEventListener('click', async (e) => {
                 const targetButton = e.target.closest('button');
                 if (!targetButton) return;
-
                 const docIdValue = targetButton.dataset.id;
 
                 if (targetButton.classList.contains('edit-btn')) {
@@ -631,7 +623,6 @@
                         try {
                             const docRef = doc(db, "eventProgram", docIdValue);
                             await deleteDoc(docRef);
-                            console.log("Atividade excluída com sucesso!");
                             program = await loadProgramFromFirestore();
                             renderAdminProgram();
                             if (activityDocIdInput.value === docIdValue) {
@@ -640,16 +631,32 @@
                         } catch (error) {
                             console.error("Erro ao excluir atividade: ", error);
                             alert("Erro ao excluir atividade. Verifique o console (F12).");
-                            targetButton.disabled = false;
-                            targetButton.textContent = 'Excluir';
+                        } finally {
+                            const stillExistsButton = adminProgramBody.querySelector(`button.delete-btn[data-id="${docIdValue}"]`);
+                            if (stillExistsButton) {
+                                stillExistsButton.disabled = false;
+                                stillExistsButton.textContent = 'Excluir';
+                            }
                         }
                     }
                 }
             });
 
+            async function refreshAdminProgramDataAndTable() {
+                const docIdInForm = activityDocIdInput.value;
+                if (docIdInForm === '') {
+                    program = await loadProgramFromFirestore();
+                    renderAdminProgram();
+                } else {
+
+                }
+            }
+
             async function initializeAdminPage() {
-                program = await loadProgramFromFirestore();
-                renderAdminProgram();
+                await refreshAdminProgramDataAndTable();
+
+                if (refreshAdminIntervalId) clearInterval(refreshAdminIntervalId);
+                refreshAdminIntervalId = setInterval(refreshAdminProgramDataAndTable, 3000);
             }
 
             initializeAdminPage();

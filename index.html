@@ -668,23 +668,35 @@
                         currentEvent = item;
                         if (rowElement) rowElement.classList.add('active');
                     }
-                    else if (!nextEvent && itemStartTimeInMinutes > currentTimeInMinutesToday) {
+
+                    if (!nextEvent && itemStartTimeInMinutes > currentTimeInMinutesToday) {
                         nextEvent = item;
-                        if (rowElement) rowElement.classList.add('upcoming');
-                    }
-                    else if (itemStartTimeInMinutes > currentTimeInMinutesToday) {
-                        if (rowElement) rowElement.classList.add('upcoming');
                     }
                 }
 
-                if (!nextEvent && program.length > 0) {
-                    if (!currentEvent || (currentEvent && program.indexOf(currentEvent) < program.length - 1)) {
-                        nextEvent = program[0];
-                        const firstRowElement = Array.from(tableRows).find(row => row.dataset.originalId === program[0].id);
-                        if (firstRowElement && (!currentEvent || currentEvent.id !== program[0].id)) {
+                if (nextEvent) {
+                    const nextEventRowElement = Array.from(tableRows).find(row => row.dataset.originalId === nextEvent.id);
+                    if (nextEventRowElement) {
+                        nextEventRowElement.classList.add('upcoming');
+                    }
+                }
+
+                if (!currentEvent && program.length > 0) {
+                    if (nextEvent) {
+                        const firstRowElement = Array.from(tableRows).find(row => row.dataset.originalId === nextEvent.id);
+                        if (firstRowElement) {
                             firstRowElement.classList.add('upcoming');
                         }
+                    } else {
+                        nextActivityElem.textContent = "Fim da programação.";
+                        nextTimeSlotElem.textContent = "";
                     }
+                } else if (currentEvent && !nextEvent) {
+                    nextActivityElem.textContent = "Fim da programação.";
+                    nextTimeSlotElem.textContent = "";
+                } else if (currentEvent && nextEvent && program.indexOf(currentEvent) === program.length - 1) {
+                    nextActivityElem.textContent = "Fim da programação.";
+                    nextTimeSlotElem.textContent = "";
                 }
 
                 program.forEach(item => {

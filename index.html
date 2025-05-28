@@ -24,18 +24,93 @@
             --shadow-heavy: rgba(0, 0, 0, 0.2);
         }
 
+        body.dark-mode {
+            --primary-color: #92a8d1;
+            --secondary-color: #d8e2dc;
+            --accent-color-current: #a5e1cb;
+            --accent-color-next: #fbc4a5;
+            --text-dark: #e0e0e0;
+            --text-light: #2c2c2c;
+            --bg-light: #000000;
+            --bg-gradient-start: #363636;
+            --bg-gradient-end: #000000;
+            --shadow-light: rgba(255, 255, 255, 0.05);
+            --shadow-heavy: rgba(255, 255, 255, 0.15);
+            color: var(--text-dark);
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            margin: 0px;
-            padding: 0px;
+            margin: 0;
+            padding: 0;
             background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
             color: var(--text-dark);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             box-sizing: border-box;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        .theme-switch-wrapper {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--secondary-color);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: var(--text-light);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary-color);
+        }
+
+        input:focus+.slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
         }
 
         .container {
@@ -49,6 +124,11 @@
             animation: fadeIn 0.8s ease-out;
             position: relative;
             overflow: hidden;
+        }
+
+        body.dark-mode .container {
+            background-color: var(--bg-light);
+            box-shadow: 0px 15px 30px var(--shadow-heavy);
         }
 
         .header-logo {
@@ -82,6 +162,11 @@
             margin-bottom: 25px;
             font-weight: 700;
             letter-spacing: 0.05em;
+        }
+
+        body.dark-mode h1,
+        body.dark-mode h2 {
+            color: var(--primary-color);
         }
 
         h1 {
@@ -121,6 +206,12 @@
             box-shadow: 0px 2px 5px var(--shadow-light);
         }
 
+        body.dark-mode #current-time-display {
+            background-color: #2a2a2a;
+            color: var(--secondary-color);
+            box-shadow: 0px 2px 5px var(--shadow-heavy);
+        }
+
         #now-next {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -138,6 +229,12 @@
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
             position: relative;
             overflow: hidden;
+        }
+
+        body.dark-mode .card {
+            background-color: #4a4a4a;
+            border: 1px solid #5a5a5a;
+            box-shadow: 0px 6px 15px var(--shadow-heavy);
         }
 
         .card::before {
@@ -167,9 +264,19 @@
             background-color: #f0fff0;
         }
 
+        body.dark-mode .card.current {
+            background-color: #3a5a4a;
+            border-left-color: var(--accent-color-current);
+        }
+
         .card.next {
             border-left: 6px solid var(--accent-color-next);
             background-color: #fffaf0;
+        }
+
+        body.dark-mode .card.next {
+            background-color: #5a4a3a;
+            border-left-color: var(--accent-color-next);
         }
 
         .card h2 {
@@ -180,11 +287,19 @@
             font-weight: 600;
         }
 
+        body.dark-mode .card h2 {
+            color: var(--primary-color);
+        }
+
         .card p {
             margin: 8px 0px;
             font-size: 17px;
             color: #555555;
             line-height: 1.5;
+        }
+
+        body.dark-mode .card p {
+            color: var(--text-dark);
         }
 
         #program-list table {
@@ -205,6 +320,11 @@
             background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
             color: var(--text-light);
             box-shadow: none;
+        }
+
+        body.dark-mode #program-list thead tr {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-light);
         }
 
         #program-list thead th:first-child {
@@ -228,6 +348,11 @@
             box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.07);
         }
 
+        body.dark-mode #program-list tbody tr {
+            background-color: var(--bg-light);
+            box-shadow: 0px 3px 8px var(--shadow-light);
+        }
+
         #program-list tbody tr td:first-child {
             border-top-left-radius: 8px;
             border-bottom-left-radius: 8px;
@@ -244,6 +369,11 @@
             background-color: #f9f9f9;
         }
 
+        body.dark-mode #program-list tbody tr:hover {
+            background-color: #4a4a4a;
+            box-shadow: 0px 6px 18px var(--shadow-heavy);
+        }
+
         #program-list tr.active {
             background-color: #e6ffed;
             font-weight: 600;
@@ -251,11 +381,23 @@
             border-left: 4px solid var(--accent-color-current);
         }
 
+        body.dark-mode #program-list tr.active {
+            background-color: #3e5e4e;
+            color: var(--accent-color-current);
+            border-left-color: var(--accent-color-current);
+        }
+
         #program-list tr.upcoming {
             background-color: #fffde7;
             font-weight: 600;
             color: var(--accent-color-next);
             border-left: 4px solid var(--accent-color-next);
+        }
+
+        body.dark-mode #program-list tr.upcoming {
+            background-color: #5e4e3e;
+            color: var(--accent-color-next);
+            border-left-color: var(--accent-color-next);
         }
 
         .modal-overlay {
@@ -284,6 +426,11 @@
             animation: fadeInModal 0.5s ease-out;
         }
 
+        body.dark-mode .modal-content {
+            background-color: var(--bg-light);
+            box-shadow: 0px 10px 25px var(--shadow-heavy);
+        }
+
         @keyframes fadeInModal {
             from {
                 opacity: 0;
@@ -303,11 +450,19 @@
             margin-bottom: 15px;
         }
 
+        body.dark-mode .modal-content h3 {
+            color: var(--primary-color);
+        }
+
         .modal-content p {
             font-size: 18px;
             color: var(--text-dark);
             margin-bottom: 20px;
             line-height: 1.6;
+        }
+
+        body.dark-mode .modal-content p {
+            color: var(--text-dark);
         }
 
         .modal-content p strong {
@@ -326,7 +481,16 @@
             transition: background-color 0.3s ease;
         }
 
+        body.dark-mode .modal-close-btn {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
         .modal-close-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        body.dark-mode .modal-close-btn:hover {
             background-color: var(--secondary-color);
         }
 
@@ -343,6 +507,28 @@
         }
 
         @media (max-width: 768px) {
+            .theme-switch-wrapper {
+                top: 15px;
+                right: 15px;
+                padding: 10px;
+                background-color: rgba(0, 0, 0, 0.1);
+                border-radius: 10px;
+            }
+
+            .theme-switch {
+                width: 50px;
+                height: 28px;
+            }
+
+            .slider:before {
+                height: 22px;
+                width: 22px;
+            }
+
+            input:checked+.slider:before {
+                transform: translateX(22px);
+            }
+
             body {
                 padding: 15px;
                 align-items: flex-start;
@@ -412,6 +598,26 @@
         }
 
         @media (max-width: 480px) {
+            .theme-switch-wrapper {
+                top: 10px;
+                right: 10px;
+                padding: 8px;
+            }
+
+            .theme-switch {
+                width: 45px;
+                height: 25px;
+            }
+
+            .slider:before {
+                height: 19px;
+                width: 19px;
+            }
+
+            input:checked+.slider:before {
+                transform: translateX(20px);
+            }
+
             .container {
                 padding: 15px;
             }
@@ -460,6 +666,12 @@
 </head>
 
 <body>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+        </label>
+    </div>
     <div class="container">
         <div class="header-logo">
             <img src="img/logo.png" alt="Logo do Evento">
@@ -540,6 +752,34 @@
             const modalEventLocation = document.getElementById('modal-event-location');
             const modalCloseBtn = document.getElementById('modalCloseBtn');
 
+            const darkModeToggle = document.getElementById('checkbox');
+            const body = document.body;
+
+            function applySavedTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark') {
+                    body.classList.add('dark-mode');
+                    if (darkModeToggle) darkModeToggle.checked = true;
+                } else {
+                    body.classList.remove('dark-mode');
+                    if (darkModeToggle) darkModeToggle.checked = false;
+                }
+            }
+
+            applySavedTheme();
+
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('change', () => {
+                    if (darkModeToggle.checked) {
+                        body.classList.add('dark-mode');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        body.classList.remove('dark-mode');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
             let program = [];
             const alarmSound = new Audio('alarme.mp3');
             let updateIntervalId = null;
@@ -557,7 +797,12 @@
                     let programData = [];
                     if (!querySnapshot.empty) {
                         querySnapshot.forEach((doc) => {
-                            programData.push({ id: doc.id, ...doc.data(), alarmTriggered: false });
+                            const existingItem = program.find(p => p.id === doc.id);
+                            programData.push({
+                                id: doc.id,
+                                ...doc.data(),
+                                alarmTriggered: existingItem ? existingItem.alarmTriggered : false
+                            });
                         });
                     }
                     return programData;
@@ -672,6 +917,15 @@
                     if (!nextEvent && itemStartTimeInMinutes > currentTimeInMinutesToday) {
                         nextEvent = item;
                     }
+
+                    if (!item.alarmTriggered) {
+                        const alarmTimeInMinutes = itemStartTimeInMinutes - 10;
+
+                        if (currentTimeInMinutesToday === alarmTimeInMinutes) {
+                            showAlarmModal(item);
+                            item.alarmTriggered = true;
+                        }
+                    }
                 }
 
                 if (nextEvent) {
@@ -688,6 +942,8 @@
                             firstRowElement.classList.add('upcoming');
                         }
                     } else {
+                        currentActivityElem.textContent = "Nenhuma atividade no momento.";
+                        currentTimeSlotElem.textContent = "";
                         nextActivityElem.textContent = "Fim da programação.";
                         nextTimeSlotElem.textContent = "";
                     }
@@ -698,19 +954,6 @@
                     nextActivityElem.textContent = "Fim da programação.";
                     nextTimeSlotElem.textContent = "";
                 }
-
-                program.forEach(item => {
-                    if (item.alarmTriggered) return;
-
-                    const [itemHour, itemMinute] = item.time.split(':').map(Number);
-                    const itemStartTimeInMinutes = itemHour * 60 + itemMinute;
-
-                    let alarmTimeToday = itemStartTimeInMinutes - 10;
-                    if (currentTimeInMinutesToday >= alarmTimeToday && currentTimeInMinutesToday < itemStartTimeInMinutes) {
-                        showAlarmModal(item);
-                        item.alarmTriggered = true;
-                    }
-                });
 
                 if (currentEvent) {
                     currentActivityElem.textContent = currentEvent.activity;
@@ -749,7 +992,8 @@
                 if (refreshProgramIntervalId) clearInterval(refreshProgramIntervalId);
                 if (updateIntervalId) clearInterval(updateIntervalId);
 
-                refreshProgramIntervalId = setInterval(refreshProgramDataAndUI, 3000);
+                updateIntervalId = setInterval(updateProgramStatus, 1000);
+                refreshProgramIntervalId = setInterval(refreshProgramDataAndUI, 30000);
             }
 
             initializePage();

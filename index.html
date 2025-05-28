@@ -540,19 +540,6 @@
                         alarmTriggered: typeof item.alarmTriggered === 'boolean' ? item.alarmTriggered : false
                     }));
                 }
-
-                return [
-                    { time: "09:00", activity: "Abertura do Evento e Boas-Vindas", location: "Auditório Principal", alarmTriggered: false },
-                    { time: "09:30", activity: "Palestra: Inovação e Tecnologia", location: "Auditório Principal", alarmTriggered: false },
-                    { time: "10:30", activity: "Coffee Break e Networking", location: "Área de Convivência", alarmTriggered: false },
-                    { time: "11:00", activity: "Workshop: Desenvolvimento Web Moderno", location: "Sala 1", alarmTriggered: false },
-                    { time: "11:00", activity: "Mesa Redonda: Futuro da IA", location: "Sala 2", alarmTriggered: false },
-                    { time: "12:30", activity: "Almoço", location: "Praça de Alimentação", alarmTriggered: false },
-                    { time: "14:00", activity: "Apresentação de Projetos", location: "Foyer", alarmTriggered: false },
-                    { time: "21:40", activity: "Palestra: Empreendedorismo Digital", location: "Auditório Principal", alarmTriggered: false }, // Exemplo de horário quebrado
-                    { time: "21:55", activity: "Encerramento e Sorteio de Prêmios", location: "Auditório Principal", alarmTriggered: false }, // Exemplo de horário quebrado
-                    { time: "22:20", activity: "Happy Hour de Despedida", location: "Bar do Evento", alarmTriggered: false }
-                ];
             }
 
             let program = loadProgramFromLocalStorage();

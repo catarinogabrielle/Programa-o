@@ -750,7 +750,7 @@
             const nextTimeSlotElem = document.getElementById('next-time-slot');
             const currentTimeDisplay = document.getElementById('current-time-display');
             const loadingIndicatorProgram = document.getElementById('loadingIndicatorProgram');
-            const countdownNextActivity = document.getElementById('countdown-next-activity'); // Novo elemento
+            const countdownNextActivity = document.getElementById('countdown-next-activity');
 
             const alarmModal = document.getElementById('alarmModal');
             const modalEventActivity = document.getElementById('modal-event-activity');
@@ -787,7 +787,6 @@
             }
 
             let program = [];
-            const alarmSound = new Audio('alarme.mp3');
             let updateIntervalId = null;
             let refreshProgramIntervalId = null;
 
@@ -856,18 +855,11 @@
                 modalEventTime.textContent = eventItem.time;
                 modalEventLocation.textContent = eventItem.location;
                 alarmModal.style.display = 'flex';
-
-                alarmSound.play()
-                    .catch(error => {
-                        console.error("Erro ao tocar o som do alarme:", error);
-                    });
             }
 
             if (modalCloseBtn) {
                 modalCloseBtn.addEventListener('click', () => {
                     if (alarmModal) alarmModal.style.display = 'none';
-                    alarmSound.pause();
-                    alarmSound.currentTime = 0;
                 });
             }
 

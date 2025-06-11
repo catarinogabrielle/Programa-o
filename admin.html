@@ -149,6 +149,7 @@
             background-color: var(--accent-red);
         }
 
+        #saveTitleBtn,
         #saveLocationBtn,
         #saveActivityBtn {
             background-color: var(--accent-green);
@@ -302,6 +303,19 @@
         </div>
 
         <div class="form-section">
+            <h2>Configurações Gerais</h2>
+            <form id="titleForm">
+                <div class="form-group">
+                    <label for="pageTitleInput">Título da Página Principal:</label>
+                    <input type="text" id="pageTitleInput" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" id="saveTitleBtn">Salvar Título</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="form-section">
             <h2>Gerenciar Locais</h2>
             <form id="locationForm">
                 <input type="hidden" id="locationDocId">
@@ -322,8 +336,7 @@
                             <th>Ações</th>
                         </tr>
                     </thead>
-                    <tbody id="locationListBody">
-                    </tbody>
+                    <tbody id="locationListBody"></tbody>
                 </table>
             </div>
         </div>
@@ -366,8 +379,7 @@
                             <th>Ações</th>
                         </tr>
                     </thead>
-                    <tbody id="adminProgramBody">
-                    </tbody>
+                    <tbody id="adminProgramBody"></tbody>
                 </table>
             </div>
         </div>
@@ -375,7 +387,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8EGMHVUVTrNWY2wai3YmXE1ZrlZ6Gz6o",
@@ -384,25 +396,22 @@
             storageBucket: "programacao-9b5ff.appspot.com",
             messagingSenderId: "454543714542",
             appId: "1:454543714542:web:0d57bf8de021d5e79e6bff",
-            measurementId: "G-NMHH7J7Z58"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const programCollectionRef = collection(db, 'eventProgram');
         const locationsCollectionRef = collection(db, 'eventLocations');
+        const siteConfigRef = doc(db, 'site_config', 'main_settings');
 
         document.addEventListener('DOMContentLoaded', () => {
             const logoutBtn = document.getElementById('logoutBtn');
-            const activityForm = document.getElementById('activityForm');
-            const activityDocIdInput = document.getElementById('activityDocId');
-            const activityTimeInput = document.getElementById('activityTime');
-            const activityNameInput = document.getElementById('activityName');
-            const activityLocationSelect = document.getElementById('activityLocationSelect');
-            const saveActivityBtn = document.getElementById('saveActivityBtn');
-            const clearActivityFormBtn = document.getElementById('clearActivityFormBtn');
             const adminProgramBody = document.getElementById('adminProgramBody');
             const loadingIndicator = document.getElementById('loadingIndicator');
+
+            const titleForm = document.getElementById('titleForm');
+            const pageTitleInput = document.getElementById('pageTitleInput');
+            const saveTitleBtn = document.getElementById('saveTitleBtn');
 
             const locationForm = document.getElementById('locationForm');
             const locationDocIdInput = document.getElementById('locationDocId');
@@ -411,19 +420,54 @@
             const clearLocationFormBtn = document.getElementById('clearLocationFormBtn');
             const locationListBody = document.getElementById('locationListBody');
 
+            const activityForm = document.getElementById('activityForm');
+            const activityDocIdInput = document.getElementById('activityDocId');
+            const activityTimeInput = document.getElementById('activityTime');
+            const activityNameInput = document.getElementById('activityName');
+            const activityLocationSelect = document.getElementById('activityLocationSelect');
+            const saveActivityBtn = document.getElementById('saveActivityBtn');
+            const clearActivityFormBtn = document.getElementById('clearActivityFormBtn');
+
             let program = [];
             let locations = [];
 
             if (localStorage.getItem('loggedIn') !== 'true') {
-                alert("Você não está logado. Redirecionando para login...");
                 window.location.href = 'login.html';
                 return;
             }
 
             logoutBtn.addEventListener('click', () => {
                 localStorage.removeItem('loggedIn');
-                alert("Você foi desconectado.");
                 window.location.href = 'login.html';
+            });
+
+            async function loadPageTitle() {
+                try {
+                    const docSnap = await getDoc(siteConfigRef);
+                    if (docSnap.exists() && docSnap.data().pageTitle) {
+                        pageTitleInput.value = docSnap.data().pageTitle;
+                    }
+                } catch (error) {
+                    console.error("Erro ao carregar o título:", error);
+                }
+            }
+
+            titleForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveTitleBtn.disabled = true;
+                saveTitleBtn.textContent = 'Salvando...';
+                const newTitle = pageTitleInput.value.trim();
+
+                try {
+                    await setDoc(siteConfigRef, { pageTitle: newTitle }, { merge: true });
+                    alert('Título atualizado com sucesso!');
+                } catch (error) {
+                    console.error("Erro ao salvar o título:", error);
+                    alert('Ocorreu um erro ao salvar o título.');
+                } finally {
+                    saveTitleBtn.disabled = false;
+                    saveTitleBtn.textContent = 'Salvar Título';
+                }
             });
 
             async function loadLocationsFromFirestore() {
@@ -432,13 +476,12 @@
                     const querySnapshot = await getDocs(q);
                     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 } catch (error) {
-                    console.error("Erro ao carregar locais do Firestore: ", error);
+                    console.error("Erro ao carregar locais:", error);
                     return [];
                 }
             }
 
             function renderLocations() {
-                if (!locationListBody) return;
                 locationListBody.innerHTML = '';
                 activityLocationSelect.innerHTML = '<option value="">Selecione um local</option>';
 
@@ -452,8 +495,8 @@
                     row.innerHTML = `
                         <td>${loc.name}</td>
                         <td class="action-buttons">
-                            <button class="edit-location-btn" data-id="${loc.id}" title="Editar Local">Editar</button>
-                            <button class="delete-location-btn" data-id="${loc.id}" title="Excluir Local">Excluir</button>
+                            <button class="edit-location-btn" data-id="${loc.id}">Editar</button>
+                            <button class="delete-location-btn" data-id="${loc.id}">Excluir</button>
                         </td>`;
                     locationListBody.appendChild(row);
 
@@ -468,7 +511,6 @@
                 e.preventDefault();
                 saveLocationBtn.disabled = true;
                 saveLocationBtn.textContent = 'Salvando...';
-
                 const name = locationNameInput.value.trim();
                 const docIdValue = locationDocIdInput.value;
 
@@ -488,7 +530,7 @@
                     await refreshLocationsDataAndUI();
                     clearLocationForm();
                 } catch (error) {
-                    console.error("Erro ao salvar local: ", error);
+                    console.error("Erro ao salvar local:", error);
                 } finally {
                     saveLocationBtn.disabled = false;
                     saveLocationBtn.textContent = locationDocIdInput.value ? 'Salvar Edição' : 'Adicionar Local';
@@ -505,25 +547,24 @@
             clearLocationFormBtn.addEventListener('click', clearLocationForm);
 
             locationListBody.addEventListener('click', async (e) => {
-                const targetButton = e.target.closest('button');
-                if (!targetButton) return;
-                const docIdValue = targetButton.dataset.id;
-                const item = locations.find(item => item.id === docIdValue);
+                const target = e.target.closest('button');
+                if (!target) return;
+                const docId = target.dataset.id;
+                const location = locations.find(l => l.id === docId);
 
-                if (targetButton.classList.contains('edit-location-btn')) {
-                    locationNameInput.value = item.name;
-                    locationDocIdInput.value = docIdValue;
+                if (target.classList.contains('edit-location-btn')) {
+                    locationNameInput.value = location.name;
+                    locationDocIdInput.value = location.id;
                     saveLocationBtn.textContent = 'Salvar Edição';
                     locationNameInput.focus();
-                } else if (targetButton.classList.contains('delete-location-btn')) {
-                    if (confirm(`Tem certeza que deseja excluir o local "${item.name}"?`)) {
-                        targetButton.disabled = true;
+                } else if (target.classList.contains('delete-location-btn')) {
+                    if (confirm(`Tem certeza que deseja excluir o local "${location.name}"?`)) {
                         try {
-                            await deleteDoc(doc(db, "eventLocations", docIdValue));
+                            await deleteDoc(doc(db, "eventLocations", docId));
                             await refreshLocationsDataAndUI();
                             await refreshAdminProgramDataAndTable();
                         } catch (error) {
-                            console.error("Erro ao excluir local: ", error);
+                            console.error("Erro ao excluir local:", error);
                         }
                     }
                 }
@@ -544,7 +585,6 @@
             }
 
             function renderAdminProgram() {
-                if (!adminProgramBody) return;
                 adminProgramBody.innerHTML = '';
                 if (program.length === 0 && !loadingIndicator.classList.contains('active')) {
                     adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>';
@@ -625,7 +665,6 @@
                     activityTimeInput.focus();
                 } else if (targetButton.classList.contains('delete-btn')) {
                     if (confirm(`Tem certeza que deseja excluir "${item.activity}"?`)) {
-                        targetButton.disabled = true;
                         try {
                             await deleteDoc(doc(db, "eventProgram", docIdValue));
                             await refreshAdminProgramDataAndTable();
@@ -647,6 +686,7 @@
             }
 
             async function initializeAdminPage() {
+                await loadPageTitle();
                 await refreshLocationsDataAndUI();
                 await refreshAdminProgramDataAndTable();
             }

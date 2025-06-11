@@ -301,7 +301,7 @@
     <div class="container">
         <header class="header">
             <img src="img/logo.png" alt="Logo do Evento" class="header-logo">
-            <h1>Programação do Evento</h1>
+            <h1 id="pageTitle">Programação do Evento</h1>
         </header>
 
         <main>
@@ -342,7 +342,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8EGMHVUVTrNWY2wai3YmXE1ZrlZ6Gz6o",
@@ -357,6 +357,7 @@
         const db = getFirestore(app);
         const programCollectionRef = collection(db, 'eventProgram');
         const locationsCollectionRef = collection(db, 'eventLocations');
+        const siteConfigRef = doc(db, 'site_config', 'main_settings');
 
         const state = {
             program: [],
@@ -364,6 +365,7 @@
             lastUpdatedMinute: -1,
         };
 
+        const pageTitleElement = document.getElementById('pageTitle');
         const timeValueDisplay = document.getElementById('time-value');
         const nowNextDisplayContainer = document.getElementById('now-next-display');
         const programBody = document.getElementById('program-body');
@@ -375,10 +377,20 @@
 
         async function fetchData() {
             try {
-                const [locationsSnapshot, programSnapshot] = await Promise.all([
+                const [locationsSnapshot, programSnapshot, configDoc] = await Promise.all([
                     getDocs(query(locationsCollectionRef, orderBy("name"))),
-                    getDocs(query(programCollectionRef, orderBy("time")))
+                    getDocs(query(programCollectionRef, orderBy("time"))),
+                    getDoc(siteConfigRef)
                 ]);
+
+                if (configDoc.exists() && configDoc.data().pageTitle) {
+                    const newTitle = configDoc.data().pageTitle;
+                    pageTitleElement.textContent = newTitle;
+                    document.title = newTitle;
+                } else {
+                    pageTitleElement.textContent = "Programação do Evento";
+                }
+
                 state.locations = locationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 state.program = programSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -387,6 +399,7 @@
 
             } catch (error) {
                 console.error("Erro ao carregar dados do Firestore: ", error);
+                pageTitleElement.textContent = "Erro ao Carregar";
                 programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Erro ao carregar a programação.</td></tr>';
             }
         }
@@ -425,8 +438,9 @@
 
         function renderNowNextCards({ schedule }) {
             nowNextDisplayContainer.innerHTML = '';
-            const fragment = new DocumentFragment();
+            if (!state.locations) return;
 
+            const fragment = new DocumentFragment();
             state.locations.forEach(loc => {
                 const currentEvent = schedule.find(p => p.locationId === loc.id && p.status === 'now');
                 const nextEvent = schedule.find(p => p.locationId === loc.id && p.status === 'next');
@@ -464,7 +478,10 @@
 
         function renderProgramTable({ schedule, eventStatus }) {
             programBody.innerHTML = '';
-            if (schedule.length === 0) return;
+            if (!state.program || state.program.length === 0) {
+                programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhuma programação disponível.</td></tr>';
+                return;
+            }
 
             const fragment = new DocumentFragment();
             schedule.forEach(item => {
@@ -512,9 +529,11 @@
             if (currentMinute !== state.lastUpdatedMinute) {
                 state.lastUpdatedMinute = currentMinute;
 
-                const processedData = getEventStatus(now);
-                renderNowNextCards(processedData);
-                renderProgramTable(processedData);
+                if (state.program.length > 0) {
+                    const processedData = getEventStatus(now);
+                    renderNowNextCards(processedData);
+                    renderProgramTable(processedData);
+                }
             }
 
             updateAllCountdowns();

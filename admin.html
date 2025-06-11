@@ -408,18 +408,15 @@
             const logoutBtn = document.getElementById('logoutBtn');
             const adminProgramBody = document.getElementById('adminProgramBody');
             const loadingIndicator = document.getElementById('loadingIndicator');
-
             const titleForm = document.getElementById('titleForm');
             const pageTitleInput = document.getElementById('pageTitleInput');
             const saveTitleBtn = document.getElementById('saveTitleBtn');
-
             const locationForm = document.getElementById('locationForm');
             const locationDocIdInput = document.getElementById('locationDocId');
             const locationNameInput = document.getElementById('locationName');
             const saveLocationBtn = document.getElementById('saveLocationBtn');
             const clearLocationFormBtn = document.getElementById('clearLocationFormBtn');
             const locationListBody = document.getElementById('locationListBody');
-
             const activityForm = document.getElementById('activityForm');
             const activityDocIdInput = document.getElementById('activityDocId');
             const activityTimeInput = document.getElementById('activityTime');
@@ -430,6 +427,9 @@
 
             let program = [];
             let locations = [];
+            let refreshProgramIntervalId = null;
+            let refreshLocationsIntervalId = null;
+
 
             if (localStorage.getItem('loggedIn') !== 'true') {
                 window.location.href = 'login.html';
@@ -591,7 +591,9 @@
                     return;
                 }
 
-                program.forEach(item => {
+                const sortedProgram = [...program].sort((a, b) => a.time.localeCompare(b.time));
+
+                sortedProgram.forEach(item => {
                     const locationName = locations.find(loc => loc.id === item.locationId)?.name || 'N/D';
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -689,6 +691,12 @@
                 await loadPageTitle();
                 await refreshLocationsDataAndUI();
                 await refreshAdminProgramDataAndTable();
+
+                if (refreshProgramIntervalId) clearInterval(refreshProgramIntervalId);
+                refreshProgramIntervalId = setInterval(refreshAdminProgramDataAndTable, 10000);
+
+                if (refreshLocationsIntervalId) clearInterval(refreshLocationsIntervalId);
+                refreshLocationsIntervalId = setInterval(refreshLocationsDataAndUI, 30000);
             }
 
             initializeAdminPage();

@@ -9,7 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="icon" type="image/png" href="img/icon.png">
+
+    <link rel="icon" type="image/png" href="img/icon.png" id="favicon">
 
     <style>
         :root {
@@ -64,6 +65,7 @@
         .header-logo {
             max-width: 140px;
             margin-bottom: 20px;
+            height: auto;
         }
 
         h1 {
@@ -298,7 +300,7 @@
 <body class="dark-mode">
     <div class="container">
         <header class="header">
-            <img src="img/logo.png" alt="Logo do Evento" class="header-logo">
+            <img src="img/logo.png" alt="Logo do Evento" class="header-logo" id="headerLogo">
             <h1 id="pageTitle">Programação do Evento</h1>
         </header>
 
@@ -334,7 +336,7 @@
         </main>
 
         <footer>
-            <p>Tecnologia CATARINO'S</p>
+            <p>Todos os direitos reservados Live7 LTDA</p>
         </footer>
     </div>
 
@@ -364,9 +366,13 @@
         };
 
         const pageTitleElement = document.getElementById('pageTitle');
+        const headerLogo = document.getElementById('headerLogo');
         const timeValueDisplay = document.getElementById('time-value');
         const nowNextDisplayContainer = document.getElementById('now-next-display');
         const programBody = document.getElementById('program-body');
+
+        // 1. Selecionar o elemento do favicon pelo novo ID
+        const favicon = document.getElementById('favicon');
 
         const timeToMinutes = (timeString) => {
             if (!timeString) return 0;
@@ -382,10 +388,19 @@
                     getDoc(siteConfigRef)
                 ]);
 
-                if (configDoc.exists() && configDoc.data().pageTitle) {
-                    const newTitle = configDoc.data().pageTitle;
+                if (configDoc.exists()) {
+                    const configData = configDoc.data();
+                    const newTitle = configData.pageTitle || "Programação do Evento";
+
                     pageTitleElement.textContent = newTitle;
                     document.title = newTitle;
+
+                    if (configData.logoBase64) {
+                        // Atualiza a logo principal
+                        headerLogo.src = configData.logoBase64;
+                        // 2. Atualizar o 'href' do favicon com a mesma string Base64
+                        favicon.href = configData.logoBase64;
+                    }
                 } else {
                     pageTitleElement.textContent = "Programação do Evento";
                 }
@@ -544,7 +559,7 @@
             await fetchData();
 
             setInterval(updateDisplay, 1000);
-            setInterval(fetchData, 3000);
+            setInterval(fetchData, 10000);
         }
 
         document.addEventListener('DOMContentLoaded', initialize);

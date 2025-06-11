@@ -99,6 +99,7 @@
         .form-group input[type="time"],
         .form-group input[type="text"],
         .form-group input[type="number"],
+        .form-group input[type="file"],
         .form-group select {
             padding: 12px;
             border: 1px solid var(--border-color);
@@ -167,7 +168,7 @@
             background-color: var(--accent-red);
         }
 
-        #saveTitleBtn,
+        #saveConfigBtn,
         #saveLocationBtn,
         #saveActivityBtn {
             background-color: var(--accent-green);
@@ -188,6 +189,14 @@
         .action-buttons button.delete-btn,
         .action-buttons button.delete-location-btn {
             background-color: var(--accent-red);
+        }
+        
+        #logoPreview {
+            max-width: 200px;
+            margin-top: 15px;
+            border-radius: var(--border-radius-sm);
+            background-color: var(--bg-page);
+            padding: 5px;
         }
 
         .table-responsive-wrapper {
@@ -264,7 +273,6 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0px);
@@ -287,25 +295,18 @@
             body {
                 padding: 15px;
             }
-
             .admin-container {
                 padding: 0;
             }
-
             .admin-header h1 {
                 font-size: 28px;
             }
-
-            .form-section,
-            .program-table-section {
+            .form-section, .program-table-section {
                 padding: 20px;
             }
-
-            .form-section h2,
-            .program-table-section h2 {
+            .form-section h2, .program-table-section h2 {
                 font-size: 22px;
             }
-
             .table-responsive-wrapper table {
                 min-width: 100%;
             }
@@ -322,13 +323,20 @@
 
         <div class="form-section">
             <h2>Configurações Gerais</h2>
-            <form id="titleForm">
+            <form id="siteConfigForm">
                 <div class="form-group">
                     <label for="pageTitleInput">Título da Página Principal:</label>
                     <input type="text" id="pageTitleInput" required>
                 </div>
+                
+                <div class="form-group">
+                    <label for="logoUploadInput">Logo do Evento (deixe em branco para manter a atual)</label>
+                    <input type="file" id="logoUploadInput" accept="image/png, image/jpeg, image/gif, image/svg+xml">
+                    <img id="logoPreview" src="" alt="Pré-visualização da logo" style="display: none;">
+                </div>
+
                 <div class="form-buttons">
-                    <button type="submit" id="saveTitleBtn">Salvar Título</button>
+                    <button type="submit" id="saveConfigBtn">Salvar Configurações</button>
                 </div>
             </form>
         </div>
@@ -414,7 +422,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-
+        
         const firebaseConfig = {
             apiKey: "AIzaSyD8EGMHVUVTrNWY2wai3YmXE1ZrlZ6Gz6o",
             authDomain: "programacao-9b5ff.firebaseapp.com",
@@ -434,15 +442,23 @@
             const logoutBtn = document.getElementById('logoutBtn');
             const adminProgramBody = document.getElementById('adminProgramBody');
             const loadingIndicator = document.getElementById('loadingIndicator');
-            const titleForm = document.getElementById('titleForm');
+
+            // Formulário de Configurações Gerais
+            const siteConfigForm = document.getElementById('siteConfigForm');
             const pageTitleInput = document.getElementById('pageTitleInput');
-            const saveTitleBtn = document.getElementById('saveTitleBtn');
+            const logoUploadInput = document.getElementById('logoUploadInput');
+            const logoPreview = document.getElementById('logoPreview');
+            const saveConfigBtn = document.getElementById('saveConfigBtn');
+
+            // Formulário de Locais
             const locationForm = document.getElementById('locationForm');
             const locationDocIdInput = document.getElementById('locationDocId');
             const locationNameInput = document.getElementById('locationName');
             const saveLocationBtn = document.getElementById('saveLocationBtn');
             const clearLocationFormBtn = document.getElementById('clearLocationFormBtn');
             const locationListBody = document.getElementById('locationListBody');
+            
+            // Formulário de Atividades
             const activityForm = document.getElementById('activityForm');
             const activityDocIdInput = document.getElementById('activityDocId');
             const activityTimeInput = document.getElementById('activityTime');
@@ -456,8 +472,6 @@
 
             let program = [];
             let locations = [];
-            let refreshProgramIntervalId = null;
-            let refreshLocationsIntervalId = null;
 
             if (localStorage.getItem('loggedIn') !== 'true') {
                 window.location.href = 'login.html';
@@ -469,35 +483,76 @@
                 window.location.href = 'login.html';
             });
 
-            async function loadPageTitle() {
+            // --- LÓGICA PARA CONFIGURAÇÕES GERAIS (TÍTULO E LOGO COM BASE64) ---
+
+            async function loadSiteConfig() {
                 try {
                     const docSnap = await getDoc(siteConfigRef);
-                    if (docSnap.exists() && docSnap.data().pageTitle) {
-                        pageTitleInput.value = docSnap.data().pageTitle;
+                    if (docSnap.exists()) {
+                        const config = docSnap.data();
+                        if (config.pageTitle) {
+                            pageTitleInput.value = config.pageTitle;
+                        }
+                        if (config.logoBase64) {
+                            logoPreview.src = config.logoBase64;
+                            logoPreview.style.display = 'block';
+                        }
                     }
                 } catch (error) {
-                    console.error("Erro ao carregar o título:", error);
+                    console.error("Erro ao carregar configurações do site:", error);
                 }
             }
-
-            titleForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                saveTitleBtn.disabled = true;
-                saveTitleBtn.textContent = 'Salvando...';
-                const newTitle = pageTitleInput.value.trim();
-
-                try {
-                    await setDoc(siteConfigRef, { pageTitle: newTitle }, { merge: true });
-                    alert('Título atualizado com sucesso!');
-                } catch (error) {
-                    console.error("Erro ao salvar o título:", error);
-                    alert('Ocorreu um erro ao salvar o título.');
-                } finally {
-                    saveTitleBtn.disabled = false;
-                    saveTitleBtn.textContent = 'Salvar Título';
+            
+            logoUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        logoPreview.src = event.target.result;
+                        logoPreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
                 }
             });
 
+            siteConfigForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveConfigBtn.disabled = true;
+                saveConfigBtn.textContent = 'Salvando...';
+
+                const newTitle = pageTitleInput.value.trim();
+                const file = logoUploadInput.files[0];
+
+                const configToSave = {
+                    pageTitle: newTitle,
+                };
+
+                try {
+                    if (file) {
+                        const base64String = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result);
+                            reader.onerror = error => reject(error);
+                            reader.readAsDataURL(file);
+                        });
+                        configToSave.logoBase64 = base64String;
+                    }
+
+                    await setDoc(siteConfigRef, configToSave, { merge: true });
+                    alert('Configurações salvas com sucesso!');
+                
+                } catch (error) {
+                    console.error("Erro ao salvar configurações:", error);
+                    alert('Ocorreu um erro ao salvar as configurações. Verifique o console.');
+                } finally {
+                    saveConfigBtn.disabled = false;
+                    saveConfigBtn.textContent = 'Salvar Configurações';
+                }
+            });
+
+
+            // --- LÓGICA PARA LOCAIS E ATIVIDADES (sem alterações) ---
+            
             async function loadLocationsFromFirestore() {
                 try {
                     const q = query(locationsCollectionRef, orderBy("name"));
@@ -754,15 +809,12 @@
             }
 
             async function initializeAdminPage() {
-                await loadPageTitle();
+                await loadSiteConfig();
                 await refreshLocationsDataAndUI();
                 await refreshAdminProgramDataAndTable();
-
-                if (refreshProgramIntervalId) clearInterval(refreshProgramIntervalId);
-                refreshProgramIntervalId = setInterval(refreshAdminProgramDataAndTable, 10000);
-
-                if (refreshLocationsIntervalId) clearInterval(refreshLocationsIntervalId);
-                refreshLocationsIntervalId = setInterval(refreshLocationsDataAndUI, 3000);
+                
+                setInterval(refreshAdminProgramDataAndTable, 10000);
+                setInterval(refreshLocationsDataAndUI, 10000);
             }
 
             initializeAdminPage();

@@ -759,7 +759,7 @@
                 await refreshAdminProgramDataAndTable();
 
                 if (refreshProgramIntervalId) clearInterval(refreshProgramIntervalId);
-                refreshProgramIntervalId = setInterval(refreshAdminProgramDataAndTable, 1000);
+                refreshProgramIntervalId = setInterval(refreshAdminProgramDataAndTable, 10000);
 
                 if (refreshLocationsIntervalId) clearInterval(refreshLocationsIntervalId);
                 refreshLocationsIntervalId = setInterval(refreshLocationsDataAndUI, 3000);

@@ -371,7 +371,6 @@
         const nowNextDisplayContainer = document.getElementById('now-next-display');
         const programBody = document.getElementById('program-body');
 
-        // 1. Selecionar o elemento do favicon pelo novo ID
         const favicon = document.getElementById('favicon');
 
         const timeToMinutes = (timeString) => {
@@ -396,9 +395,7 @@
                     document.title = newTitle;
 
                     if (configData.logoBase64) {
-                        // Atualiza a logo principal
                         headerLogo.src = configData.logoBase64;
-                        // 2. Atualizar o 'href' do favicon com a mesma string Base64
                         favicon.href = configData.logoBase64;
                     }
                 } else {

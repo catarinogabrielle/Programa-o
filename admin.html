@@ -190,7 +190,7 @@
         .action-buttons button.delete-location-btn {
             background-color: var(--accent-red);
         }
-        
+
         #logoPreview {
             max-width: 200px;
             margin-top: 15px;
@@ -273,6 +273,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0px);
@@ -295,18 +296,25 @@
             body {
                 padding: 15px;
             }
+
             .admin-container {
                 padding: 0;
             }
+
             .admin-header h1 {
                 font-size: 28px;
             }
-            .form-section, .program-table-section {
+
+            .form-section,
+            .program-table-section {
                 padding: 20px;
             }
-            .form-section h2, .program-table-section h2 {
+
+            .form-section h2,
+            .program-table-section h2 {
                 font-size: 22px;
             }
+
             .table-responsive-wrapper table {
                 min-width: 100%;
             }
@@ -328,7 +336,7 @@
                     <label for="pageTitleInput">Título da Página Principal:</label>
                     <input type="text" id="pageTitleInput" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="logoUploadInput">Logo do Evento (deixe em branco para manter a atual)</label>
                     <input type="file" id="logoUploadInput" accept="image/png, image/jpeg, image/gif, image/svg+xml">
@@ -422,7 +430,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-        
+
         const firebaseConfig = {
             apiKey: "AIzaSyD8EGMHVUVTrNWY2wai3YmXE1ZrlZ6Gz6o",
             authDomain: "programacao-9b5ff.firebaseapp.com",
@@ -443,22 +451,19 @@
             const adminProgramBody = document.getElementById('adminProgramBody');
             const loadingIndicator = document.getElementById('loadingIndicator');
 
-            // Formulário de Configurações Gerais
             const siteConfigForm = document.getElementById('siteConfigForm');
             const pageTitleInput = document.getElementById('pageTitleInput');
             const logoUploadInput = document.getElementById('logoUploadInput');
             const logoPreview = document.getElementById('logoPreview');
             const saveConfigBtn = document.getElementById('saveConfigBtn');
 
-            // Formulário de Locais
             const locationForm = document.getElementById('locationForm');
             const locationDocIdInput = document.getElementById('locationDocId');
             const locationNameInput = document.getElementById('locationName');
             const saveLocationBtn = document.getElementById('saveLocationBtn');
             const clearLocationFormBtn = document.getElementById('clearLocationFormBtn');
             const locationListBody = document.getElementById('locationListBody');
-            
-            // Formulário de Atividades
+
             const activityForm = document.getElementById('activityForm');
             const activityDocIdInput = document.getElementById('activityDocId');
             const activityTimeInput = document.getElementById('activityTime');
@@ -483,8 +488,6 @@
                 window.location.href = 'login.html';
             });
 
-            // --- LÓGICA PARA CONFIGURAÇÕES GERAIS (TÍTULO E LOGO COM BASE64) ---
-
             async function loadSiteConfig() {
                 try {
                     const docSnap = await getDoc(siteConfigRef);
@@ -502,10 +505,10 @@
                     console.error("Erro ao carregar configurações do site:", error);
                 }
             }
-            
+
             logoUploadInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
-                if(file) {
+                if (file) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         logoPreview.src = event.target.result;
@@ -540,7 +543,7 @@
 
                     await setDoc(siteConfigRef, configToSave, { merge: true });
                     alert('Configurações salvas com sucesso!');
-                
+
                 } catch (error) {
                     console.error("Erro ao salvar configurações:", error);
                     alert('Ocorreu um erro ao salvar as configurações. Verifique o console.');
@@ -550,9 +553,6 @@
                 }
             });
 
-
-            // --- LÓGICA PARA LOCAIS E ATIVIDADES (sem alterações) ---
-            
             async function loadLocationsFromFirestore() {
                 try {
                     const q = query(locationsCollectionRef, orderBy("name"));
@@ -812,7 +812,7 @@
                 await loadSiteConfig();
                 await refreshLocationsDataAndUI();
                 await refreshAdminProgramDataAndTable();
-                
+
                 setInterval(refreshAdminProgramDataAndTable, 10000);
                 setInterval(refreshLocationsDataAndUI, 10000);
             }

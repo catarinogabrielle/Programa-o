@@ -5,723 +5,339 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Programação do Evento</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="icon" type="image/png" href="img/icon.png">
-    <link rel="shortcut icon" href="img/icon.png" type="image/x-icon">
 
     <style>
         :root {
-            --primary-color: #050c72;
-            --secondary-color: #476cbc;
-            --accent-color-current: #00c853;
-            --accent-color-next: #ffab00;
-            --text-dark: #333333;
-            --text-light: #f8f8f8;
-            --bg-light: #ffffff;
-            --bg-gradient-start: #e0f2f7;
-            --bg-gradient-end: #a5e1cd;
-            --shadow-light: rgba(0, 0, 0, 0.08);
-            --shadow-heavy: rgba(0, 0, 0, 0.2);
-            --alert-color: #ce0000;
+            --bg-page: #121212;
+            --bg-card: #1E1E1E;
+            --bg-header: linear-gradient(90deg, #1e3a8a, #2563eb);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #EAEAEA;
+            --text-secondary: #A9A9AA;
+            --text-on-accent: #FFFFFF;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --border-radius-md: 12px;
+            --border-radius-sm: 8px;
         }
 
-        body.dark-mode {
-            --primary-color: #92a8d1;
-            --secondary-color: #d8e2dc;
-            --accent-color-current: #a5e1cb;
-            --accent-color-next: #fbc4a5;
-            --text-dark: #e0e0e0;
-            --text-light: #2c2c2c;
-            --bg-light: #000000;
-            --bg-gradient-start: #616161;
-            --bg-gradient-end: #000000;
-            --shadow-light: rgba(255, 255, 255, 0.05);
-            --shadow-heavy: rgba(255, 255, 255, 0.15);
-            color: var(--text-dark);
-            --alert-color: #ff6868;
+        body:not(.dark-mode) {
+            --bg-page: #f0f2f5;
+            --bg-card: #ffffff;
+            --border-color: #e5e7eb;
+            --text-primary: #1c1c1c;
+            --text-secondary: #555555;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-            color: var(--text-dark);
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            padding: 20px 15px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        .header-logo {
+            max-width: 140px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 29px;
+            font-weight: 600;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin: 40px 0 20px;
+            text-align: center;
+        }
+
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: 15px 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        #current-time-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 400px;
+            margin: 0 auto 40px auto;
+        }
+
+        .time-clock {
+            font-size: 21px;
+            font-weight: 600;
+        }
+
+        .time-legend {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-green {
+            background-color: var(--accent-green);
+        }
+
+        .dot-red {
+            background-color: var(--accent-red);
+        }
+
+        .now-next-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .now-next-group .group-title {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            padding: 15px;
+            border-radius: var(--border-radius-sm);
+            color: var(--text-on-accent);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        .theme-switch-wrapper {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            z-index: 1001;
-        }
-
-        .theme-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-
-        .theme-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: var(--secondary-color);
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: var(--text-light);
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: var(--primary-color);
-        }
-
-        input:focus+.slider {
-            box-shadow: 0 0 1px var(--primary-color);
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(26px);
-        }
-
-        .container {
-            background-color: var(--bg-light);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0px 15px 30px var(--shadow-heavy);
-            width: 90%;
-            max-width: 900px;
-            margin: 20px auto;
-            animation: fadeIn 0.8s ease-out;
-            position: relative;
-            overflow: hidden;
-        }
-
-        body.dark-mode .container {
-            background-color: var(--bg-light);
-            box-shadow: 0px 15px 30px var(--shadow-heavy);
-        }
-
-        .header-logo {
+            min-height: 100px;
             text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .header-logo img {
-            max-width: 200px;
-            height: auto;
-            margin-bottom: 0px;
-            filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.486));
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0px);
-            }
-        }
-
-        h1,
-        h2 {
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: 25px;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-        }
-
-        body.dark-mode h1,
-        body.dark-mode h2 {
-            color: var(--primary-color);
-        }
-
-        h1 {
-            font-size: 42px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-
-        h2 {
-            font-size: 30px;
-            margin-top: 30px;
-            position: relative;
-        }
-
-        h2::after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 3px;
-            background-color: var(--secondary-color);
-            margin: 10px auto 0px auto;
-            border-radius: 2px;
-        }
-
-        #current-time-display {
-            text-align: center;
-            font-size: 24px;
-            margin: 0px auto 30px auto;
-            font-weight: 600;
-            color: var(--secondary-color);
-            background-color: #f0f8ff;
-            padding: 10px 20px;
-            border-radius: 8px;
-            display: block;
-            max-width: fit-content;
-            box-shadow: 0px 2px 5px var(--shadow-light);
-        }
-
-        body.dark-mode #current-time-display {
-            background-color: #2a2a2a;
-            color: var(--secondary-color);
-            box-shadow: 0px 2px 5px var(--shadow-heavy);
-        }
-
-        #now-next {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .card {
-            background-color: var(--bg-light);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0px 6px 15px var(--shadow-light);
-            text-align: center;
-            border: 1px solid #e0e0e0;
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            position: relative;
-            overflow: hidden;
-        }
-
-        body.dark-mode .card {
-            background-color: #4a4a4a;
-            border: 1px solid #5a5a5a;
-            box-shadow: 0px 6px 15px var(--shadow-heavy);
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
-            pointer-events: none;
-            transition: opacity 0.3s ease-out;
-            opacity: 0;
-        }
-
-        .card:hover::before {
-            opacity: 1;
+            transition: background-color 0.3s ease, transform 0.2s ease;
         }
 
         .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0px 10px 25px var(--shadow-heavy);
+            transform: translateY(-3px);
         }
 
-        .card.current {
-            border-left: 6px solid var(--accent-color-current);
-            background-color: #f0fff0;
+        .card.current-activity {
+            background-color: var(--accent-green);
         }
 
-        body.dark-mode .card.current {
-            background-color: #3a5a4a;
-            border-left-color: var(--accent-color-current);
+        .card.next-activity {
+            background-color: var(--accent-red);
         }
 
-        .card.next {
-            border-left: 6px solid var(--accent-color-next);
-            background-color: #fffaf0;
+        .card.no-activity {
+            background-color: transparent;
+            border: 2px dashed var(--border-color);
+            color: var(--text-secondary);
+            font-size: 14px;
         }
 
-        body.dark-mode .card.next {
-            background-color: #5a4a3a;
-            border-left-color: var(--accent-color-next);
+        .card .time-slot {
+            font-size: 14px;
+            font-weight: 300;
+            margin-bottom: 5px;
         }
 
-        .card h2 {
-            margin-top: 0px;
-            color: var(--primary-color);
-            font-size: 24px;
-            margin-bottom: 10px;
+        .card .activity-name {
+            font-size: 16px;
             font-weight: 600;
         }
 
-        body.dark-mode .card h2 {
-            color: var(--primary-color);
+        .card .countdown {
+            font-size: 13px;
+            margin-top: 8px;
+            opacity: 0.9;
         }
 
-        .card p {
-            margin: 8px 0px;
-            font-size: 17px;
-            color: #555555;
-            line-height: 1.5;
-        }
-
-        body.dark-mode .card p {
-            color: var(--text-dark);
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
         }
 
         #program-list table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0 10px;
-            margin-top: 30px;
         }
 
         #program-list th,
         #program-list td {
-            padding: 15px 20px;
+            padding: 14px;
             text-align: left;
-            border-bottom: none;
+            vertical-align: middle;
+            white-space: normal;
         }
 
         #program-list thead tr {
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            color: var(--text-light);
-            box-shadow: none;
+            background: var(--bg-header);
         }
 
-        body.dark-mode #program-list thead tr {
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            color: var(--text-light);
+        #program-list thead th {
+            background: transparent;
+            color: var(--text-on-accent);
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
         }
 
         #program-list thead th:first-child {
-            border-top-left-radius: 10px;
+            border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
         }
 
         #program-list thead th:last-child {
-            border-top-right-radius: 10px;
-        }
-
-        #program-list th {
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
         }
 
         #program-list tbody tr {
-            background-color: var(--bg-light);
-            transition: all 0.3s ease-in-out;
-            border-radius: 8px;
-            box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.07);
-        }
-
-        body.dark-mode #program-list tbody tr {
-            background-color: var(--bg-light);
-            box-shadow: 0px 3px 8px var(--shadow-light);
+            background-color: var(--bg-card);
+            box-shadow: 0 2px 5px var(--shadow-color);
         }
 
         #program-list tbody tr td:first-child {
-            border-top-left-radius: 8px;
-            border-bottom-left-radius: 8px;
+            border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
         }
 
         #program-list tbody tr td:last-child {
-            border-top-right-radius: 8px;
-            border-bottom-right-radius: 8px;
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
         }
 
-        #program-list tbody tr:hover {
-            transform: translateX(5px) scale(1.01);
-            box-shadow: 0px 6px 18px var(--shadow-heavy);
-            background-color: #f9f9f9;
+        #program-list tbody tr.active-row {
+            background-color: var(--accent-green);
+            color: var(--text-on-accent);
+            font-weight: 500;
         }
 
-        body.dark-mode #program-list tbody tr:hover {
-            background-color: #4a4a4a;
-            box-shadow: 0px 6px 18px var(--shadow-heavy);
+        #program-list tbody tr.upcoming-row {
+            background-color: var(--accent-red);
+            color: var(--text-on-accent);
+            font-weight: 500;
         }
 
-        #program-list tr.active {
-            background-color: #e6ffed;
-            font-weight: 600;
-            color: var(--accent-color-current);
-            border-left: 4px solid var(--accent-color-current);
-        }
-
-        body.dark-mode #program-list tr.active {
-            background-color: #3e5e4e;
-            color: var(--accent-color-current);
-            border-left-color: var(--accent-color-current);
-        }
-
-        #program-list tr.upcoming {
-            background-color: #fffde7;
-            font-weight: 600;
-            color: var(--accent-color-next);
-            border-left: 4px solid var(--accent-color-next);
-        }
-
-        body.dark-mode #program-list tr.upcoming {
-            background-color: #5e4e3e;
-            color: var(--accent-color-next);
-            border-left-color: var(--accent-color-next);
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-
-        .modal-content {
-            background-color: var(--bg-light);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 10px 25px var(--shadow-heavy);
+        footer {
+            margin-top: 40px;
             text-align: center;
-            max-width: 500px;
-            width: 90%;
-            animation: fadeInModal 0.5s ease-out;
+            font-size: 14px;
+            color: var(--text-secondary);
         }
 
-        body.dark-mode .modal-content {
-            background-color: var(--bg-light);
-            box-shadow: 0px 10px 25px var(--shadow-heavy);
-        }
-
-        @keyframes fadeInModal {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .modal-content h3 {
-            color: var(--primary-color);
-            font-size: 28px;
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-
-        body.dark-mode .modal-content h3 {
-            color: var(--primary-color);
-        }
-
-        .modal-content p {
-            font-size: 18px;
-            color: var(--text-dark);
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-
-        body.dark-mode .modal-content p {
-            color: var(--text-dark);
-        }
-
-        .modal-content p strong {
-            color: var(--secondary-color);
-        }
-
-        .modal-close-btn {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        body.dark-mode .modal-close-btn {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-        }
-
-        .modal-close-btn:hover {
-            background-color: var(--secondary-color);
-        }
-
-        body.dark-mode .modal-close-btn:hover {
-            background-color: var(--secondary-color);
-        }
-
-        .loading-indicator {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            font-size: 18px;
-            color: var(--primary-color);
-        }
-
-        .loading-indicator.active {
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .theme-switch-wrapper {
-                top: 15px;
-                right: 15px;
-                padding: 10px;
-                background-color: rgba(0, 0, 0, 0.1);
-                border-radius: 10px;
-            }
-
-            .theme-switch {
-                width: 50px;
-                height: 28px;
-            }
-
-            .slider:before {
-                height: 22px;
-                width: 22px;
-            }
-
-            input:checked+.slider:before {
-                transform: translateX(22px);
-            }
-
-            body {
-                padding: 15px;
-                align-items: flex-start;
-            }
-
-            .container {
-                padding: 25px;
-                margin: 15px auto;
-            }
-
-            .header-logo img {
-                max-width: 160px;
-            }
-
+        @media (min-width: 768px) {
             h1 {
-                font-size: 32px;
+                font-size: 35px;
             }
 
             h2 {
-                font-size: 25px;
-            }
-
-            h2::after {
-                width: 50px;
-            }
-
-            #current-time-display {
-                font-size: 20px;
-            }
-
-            #now-next {
-                grid-template-columns: 1fr;
-                gap: 20px;
-                margin-bottom: 30px;
-            }
-
-            .card {
-                padding: 18px;
-            }
-
-            .card h2 {
-                font-size: 22px;
-            }
-
-            .card p {
-                font-size: 16px;
+                font-size: 29px;
             }
 
             #program-list th,
             #program-list td {
-                padding: 12px 15px;
-                font-size: 14px;
-            }
-
-            .modal-content h3 {
-                font-size: 24px;
-            }
-
-            .modal-content p {
+                padding: 16px 20px;
                 font-size: 16px;
             }
 
-            .modal-close-btn {
-                padding: 10px 20px;
-                font-size: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .theme-switch-wrapper {
-                top: 10px;
-                right: 10px;
-                padding: 8px;
+            #program-list th:nth-child(1),
+            #program-list td:nth-child(1) {
+                width: 15%;
+                text-align: center;
             }
 
-            .theme-switch {
-                width: 45px;
-                height: 25px;
-            }
-
-            .slider:before {
-                height: 19px;
-                width: 19px;
-            }
-
-            input:checked+.slider:before {
-                transform: translateX(20px);
-            }
-
-            .container {
-                padding: 15px;
-            }
-
-            .header-logo img {
-                max-width: 130px;
-            }
-
-            h1 {
-                font-size: 26px;
-            }
-
-            h2 {
-                font-size: 20px;
-            }
-
-            #current-time-display {
-                font-size: 17px;
-                padding: 8px 15px;
-            }
-
-            #program-list th,
-            #program-list td {
-                padding: 10px;
-                font-size: 13px;
-            }
-
-            #program-list td:nth-child(3),
-            #program-list th:nth-child(3) {
-                display: none;
-            }
-
-            .modal-content {
-                padding: 20px;
-            }
-
-            .modal-content h3 {
-                font-size: 20px;
-            }
-
-            .modal-content p {
-                font-size: 15px;
+            #program-list th:nth-child(3),
+            #program-list td:nth-child(3) {
+                width: 25%;
+                text-align: center;
             }
         }
     </style>
 </head>
 
-<body>
-    <div class="theme-switch-wrapper">
-        <label class="theme-switch" for="checkbox">
-            <input type="checkbox" id="checkbox" />
-            <div class="slider round"></div>
-        </label>
-    </div>
+<body class="dark-mode">
+
     <div class="container">
-        <div class="header-logo">
-            <img src="img/logo.png" alt="Logo do Evento">
-        </div>
+        <header class="header">
+            <img src="img/logo.png" alt="Logo do Evento" class="header-logo">
+            <h1>Programação do Evento</h1>
+        </header>
 
-        <h1>Programação do Evento</h1>
-        <div id="current-time-display">Carregando hora...</div>
-        <div id="now-next">
-            <div class="card current">
-                <h2>Agora:</h2>
-                <p id="current-activity">Carregando...</p>
-                <p id="current-time-slot"></p>
-            </div>
-            <div class="card next">
-                <h2>A Seguir:</h2>
-                <p id="next-activity">Carregando...</p>
-                <p id="next-time-slot"></p>
-                <p id="countdown-next-activity"
-                    style="font-weight: 600; font-size: 19px; color: var(--alert-color); margin-top: 10px;">
-                </p>
-            </div>
-        </div>
-        <div id="program-list">
-            <h2>Programação Completa</h2>
-            <div class="loading-indicator" id="loadingIndicatorProgram">Carregando programação...</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Horário</th>
-                        <th>Atividade</th>
-                        <th>Local</th>
-                    </tr>
-                </thead>
-                <tbody id="program-body">
-                </tbody>
-            </table>
-        </div>
-    </div>
+        <main>
+            <section id="current-time-display" class="panel">
+                <div class="time-clock" aria-live="polite">
+                    <span id="time-value">--:--:--</span>
+                </div>
+                <div class="time-legend">
+                    <div class="legend-item"><span class="legend-dot dot-green"></span> Agora</div>
+                    <div class="legend-item"><span class="legend-dot dot-red"></span> A seguir</div>
+                </div>
+            </section>
 
-    <div id="alarmModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>Alerta de Evento!</h3>
-            <p>O evento <strong id="modal-event-activity">Nome da Atividade</strong> começará em aproximadamente 10
-                minutos.</p>
-            <p><strong>Horário:</strong> <span id="modal-event-time">00:00</span></p>
-            <p><strong>Local:</strong> <span id="modal-event-location">Local</span></p>
-            <button id="modalCloseBtn" class="modal-close-btn">Entendido!</button>
-        </div>
+            <section class="now-next-sections" id="now-next-display"></section>
+
+            <section id="program-list">
+                <h2>Programação Completa</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Horário</th>
+                                <th>Atividade</th>
+                                <th>Local</th>
+                            </tr>
+                        </thead>
+                        <tbody id="program-body">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Tecnologia CATARINO'S</p>
+        </footer>
     </div>
 
     <script type="module">
@@ -734,262 +350,187 @@
             projectId: "programacao-9b5ff",
             storageBucket: "programacao-9b5ff.appspot.com",
             messagingSenderId: "454543714542",
-            appId: "1:454543714542:web:0d57bf8de021d5e79e6bff",
-            measurementId: "G-NMHH7J7Z58"
+            appId: "1:454543714542:web:0d57bf8de021d5e79e6bff"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const programCollectionRef = collection(db, 'eventProgram');
+        const locationsCollectionRef = collection(db, 'eventLocations');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const programBody = document.getElementById('program-body');
-            const currentActivityElem = document.getElementById('current-activity');
-            const currentTimeSlotElem = document.getElementById('current-time-slot');
-            const nextActivityElem = document.getElementById('next-activity');
-            const nextTimeSlotElem = document.getElementById('next-time-slot');
-            const currentTimeDisplay = document.getElementById('current-time-display');
-            const loadingIndicatorProgram = document.getElementById('loadingIndicatorProgram');
-            const countdownNextActivity = document.getElementById('countdown-next-activity');
+        const state = {
+            program: [],
+            locations: [],
+            lastUpdatedMinute: -1,
+        };
 
-            const alarmModal = document.getElementById('alarmModal');
-            const modalEventActivity = document.getElementById('modal-event-activity');
-            const modalEventTime = document.getElementById('modal-event-time');
-            const modalEventLocation = document.getElementById('modal-event-location');
-            const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const timeValueDisplay = document.getElementById('time-value');
+        const nowNextDisplayContainer = document.getElementById('now-next-display');
+        const programBody = document.getElementById('program-body');
 
-            const darkModeToggle = document.getElementById('checkbox');
-            const body = document.body;
+        const timeToMinutes = (timeString) => {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            return hours * 60 + minutes;
+        };
 
-            function applySavedTheme() {
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme === 'dark') {
-                    body.classList.add('dark-mode');
-                    if (darkModeToggle) darkModeToggle.checked = true;
-                } else {
-                    body.classList.remove('dark-mode');
-                    if (darkModeToggle) darkModeToggle.checked = false;
+        async function fetchData() {
+            try {
+                const [locationsSnapshot, programSnapshot] = await Promise.all([
+                    getDocs(query(locationsCollectionRef, orderBy("name"))),
+                    getDocs(query(programCollectionRef, orderBy("time")))
+                ]);
+                state.locations = locationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                state.program = programSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                state.lastUpdatedMinute = -1;
+                updateDisplay();
+
+            } catch (error) {
+                console.error("Erro ao carregar dados do Firestore: ", error);
+                programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Erro ao carregar a programação.</td></tr>';
+            }
+        }
+
+        function getEventStatus(now) {
+            const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+
+            const scheduleWithStatus = state.program.map(item => ({ ...item, status: 'past' }));
+            const uniqueTimes = [...new Set(state.program.map(item => item.time))].sort((a, b) => a.localeCompare(b));
+
+            let nowTime = null;
+            let nextTime = null;
+
+            for (let i = 0; i < uniqueTimes.length; i++) {
+                const startTime = timeToMinutes(uniqueTimes[i]);
+                const endTime = (i < uniqueTimes.length - 1) ? timeToMinutes(uniqueTimes[i + 1]) : startTime + 60;
+
+                if (currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime) {
+                    nowTime = uniqueTimes[i];
+                    nextTime = uniqueTimes[i + 1] || null;
+                    break;
+                }
+                if (currentTimeInMinutes < startTime) {
+                    nextTime = uniqueTimes[i];
+                    break;
                 }
             }
 
-            applySavedTheme();
+            scheduleWithStatus.forEach(item => {
+                if (item.time === nowTime) item.status = 'now';
+                else if (item.time === nextTime) item.status = 'next';
+            });
 
-            if (darkModeToggle) {
-                darkModeToggle.addEventListener('change', () => {
-                    if (darkModeToggle.checked) {
-                        body.classList.add('dark-mode');
-                        localStorage.setItem('theme', 'dark');
-                    } else {
-                        body.classList.remove('dark-mode');
-                        localStorage.setItem('theme', 'light');
+            return { schedule: scheduleWithStatus, eventStatus: { now: nowTime, next: nextTime } };
+        }
+
+        function renderNowNextCards({ schedule }) {
+            nowNextDisplayContainer.innerHTML = '';
+            const fragment = new DocumentFragment();
+
+            state.locations.forEach(loc => {
+                const currentEvent = schedule.find(p => p.locationId === loc.id && p.status === 'now');
+                const nextEvent = schedule.find(p => p.locationId === loc.id && p.status === 'next');
+
+                if (!currentEvent && !nextEvent) return;
+
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'now-next-group panel';
+
+                const createCard = (event, type) => {
+                    if (!event) {
+                        return `<div class="card no-activity"><p>Nenhuma atividade</p></div>`;
                     }
-                });
-            }
+                    const countdownHtml = type === 'next' ? `<p class="countdown" data-starttime="${event.time}"></p>` : '';
+                    return `
+                        <div class="card ${type === 'now' ? 'current-activity' : 'next-activity'}">
+                            <p class="time-slot">${event.time}</p>
+                            <p class="activity-name">${event.activity}</p>
+                            ${countdownHtml}
+                        </div>`;
+                };
 
-            let program = [];
-            let updateIntervalId = null;
-            let refreshProgramIntervalId = null;
+                groupDiv.innerHTML = `
+                    <div class="group-title">${loc.name}</div>
+                    <div class="cards-container">
+                        ${createCard(currentEvent, 'now')}
+                        ${createCard(nextEvent, 'next')}
+                    </div>
+                `;
+                fragment.appendChild(groupDiv);
+            });
 
-            async function loadProgramFromFirestore() {
-                if (loadingIndicatorProgram && !programBody.querySelector('tr')) {
-                    loadingIndicatorProgram.classList.add('active');
-                }
+            nowNextDisplayContainer.appendChild(fragment);
+        }
 
-                try {
-                    const q = query(programCollectionRef, orderBy("time"));
-                    const querySnapshot = await getDocs(q);
+        function renderProgramTable({ schedule, eventStatus }) {
+            programBody.innerHTML = '';
+            if (schedule.length === 0) return;
 
-                    let programData = [];
-                    if (!querySnapshot.empty) {
-                        querySnapshot.forEach((doc) => {
-                            const existingItem = program.find(p => p.id === doc.id);
-                            programData.push({
-                                id: doc.id,
-                                ...doc.data(),
-                                alarmTriggered: existingItem ? existingItem.alarmTriggered : false
-                            });
-                        });
-                    }
-                    return programData;
+            const fragment = new DocumentFragment();
+            schedule.forEach(item => {
+                const locationName = state.locations.find(loc => loc.id === item.locationId)?.name || 'N/A';
+                const row = document.createElement('tr');
 
-                } catch (error) {
-                    console.error("Erro ao carregar programação do Firestore: ", error);
-                    if (programBody) programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Erro ao carregar programação.</td></tr>';
-                    return [];
-                } finally {
-                    if (loadingIndicatorProgram) loadingIndicatorProgram.classList.remove('active');
-                }
-            }
+                if (item.status === 'now') row.className = 'active-row';
+                else if (item.status === 'next') row.className = 'upcoming-row';
 
-            function renderProgram() {
-                if (!programBody) return;
-                programBody.innerHTML = '';
-                if (!program || program.length === 0) {
-                    if (!loadingIndicatorProgram || !loadingIndicatorProgram.classList.contains('active')) {
-                        programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhuma programação para exibir.</td></tr>';
-                    }
-                    return;
-                }
+                row.innerHTML = `<td>${item.time}</td><td>${item.activity}</td><td>${locationName}</td>`;
+                fragment.appendChild(row);
+            });
 
-                const sortedProgram = [...program].sort((a, b) => {
-                    const [ha, ma] = a.time.split(':').map(Number);
-                    const [hb, mb] = b.time.split(':').map(Number);
-                    return (ha * 60 + ma) - (hb * 60 + mb);
-                });
+            programBody.appendChild(fragment);
+        }
 
-                sortedProgram.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${item.time}</td>
-                        <td>${item.activity}</td>
-                        <td>${item.location}</td>
-                    `;
-                    row.dataset.originalId = item.id;
-                    programBody.appendChild(row);
-                });
-            }
+        function updateAllCountdowns() {
+            document.querySelectorAll('.countdown').forEach(element => {
+                const startTime = element.dataset.starttime;
+                if (!startTime) return;
 
-            function showAlarmModal(eventItem) {
-                if (!alarmModal || !modalEventActivity || !modalEventTime || !modalEventLocation) return;
-                modalEventActivity.textContent = eventItem.activity;
-                modalEventTime.textContent = eventItem.time;
-                modalEventLocation.textContent = eventItem.location;
-                alarmModal.style.display = 'flex';
-            }
-
-            if (modalCloseBtn) {
-                modalCloseBtn.addEventListener('click', () => {
-                    if (alarmModal) alarmModal.style.display = 'none';
-                });
-            }
-
-            function updateProgramStatus() {
-                if (!program || program.length === 0) {
-                    if (currentActivityElem) currentActivityElem.textContent = "Nenhuma programação.";
-                    if (currentTimeSlotElem) currentTimeSlotElem.textContent = "";
-                    if (nextActivityElem) nextActivityElem.textContent = "Nenhuma programação.";
-                    if (nextTimeSlotElem) nextTimeSlotElem.textContent = "";
-                    if (countdownNextActivity) countdownNextActivity.textContent = "";
-                    const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    if (currentTimeDisplay) currentTimeDisplay.textContent = `Hora Atual: ${nowTime}`;
-                    return;
-                }
-
+                const [hours, minutes] = startTime.split(':').map(Number);
                 const now = new Date();
-                const currentHour = now.getHours();
-                const currentMinute = now.getMinutes();
-                const currentSecond = now.getSeconds();
-                const currentTimeInMinutesToday = currentHour * 60 + currentMinute;
-                const currentTimeInSecondsToday = currentHour * 3600 + currentMinute * 60 + currentSecond;
+                const eventTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
 
-                let currentEvent = null;
-                let nextEvent = null;
+                const diffInSeconds = Math.floor((eventTime - now) / 1000);
 
-                const tableRows = programBody ? programBody.querySelectorAll('tr') : [];
-                tableRows.forEach(row => row.classList.remove('active', 'upcoming'));
-
-                for (let i = 0; i < program.length; i++) {
-                    const item = program[i];
-                    const [itemHour, itemMinute] = item.time.split(':').map(Number);
-                    const itemStartTimeInMinutes = itemHour * 60 + itemMinute;
-                    const itemStartTimeInSeconds = itemHour * 3600 + itemMinute * 60;
-
-                    let itemEndTimeInMinutes;
-                    if (i < program.length - 1) {
-                        const [nextItemHour, nextItemMinute] = program[i + 1].time.split(':').map(Number);
-                        let nextItemStartTimeComparedToCurrentItem = nextItemHour * 60 + nextItemMinute;
-
-                        if (nextItemStartTimeComparedToCurrentItem < itemStartTimeInMinutes) {
-                            itemEndTimeInMinutes = 24 * 60;
-                        } else {
-                            itemEndTimeInMinutes = nextItemStartTimeComparedToCurrentItem;
-                        }
-                    } else {
-                        itemEndTimeInMinutes = itemStartTimeInMinutes + 60;
-                        if (itemEndTimeInMinutes > 24 * 60) itemEndTimeInMinutes = 24 * 60;
-                    }
-
-                    const rowElement = Array.from(tableRows).find(row => row.dataset.originalId === item.id);
-
-                    if (!currentEvent && itemStartTimeInMinutes <= currentTimeInMinutesToday && currentTimeInMinutesToday < itemEndTimeInMinutes) {
-                        currentEvent = item;
-                        if (rowElement) rowElement.classList.add('active');
-                    }
-
-                    if (itemStartTimeInMinutes > currentTimeInMinutesToday) {
-                        if (!nextEvent || itemStartTimeInMinutes < (nextEvent.time.split(':').map(Number)[0] * 60 + nextEvent.time.split(':').map(Number)[1])) {
-                            nextEvent = item;
-                        }
-                    }
-
-                    if (!item.alarmTriggered) {
-                        const alarmTimeInMinutes = itemStartTimeInMinutes - 10;
-
-                        if (currentTimeInMinutesToday === alarmTimeInMinutes) {
-                            showAlarmModal(item);
-                            item.alarmTriggered = true;
-                        }
-                    }
-                }
-
-                if (currentEvent) {
-                    currentActivityElem.textContent = currentEvent.activity;
-                    currentTimeSlotElem.textContent = `(${currentEvent.time} - ${currentEvent.location})`;
+                if (diffInSeconds > 0) {
+                    const s = diffInSeconds % 60;
+                    const m = Math.floor(diffInSeconds / 60) % 60;
+                    const h = Math.floor(diffInSeconds / 3600);
+                    element.textContent = `Começa em: ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
                 } else {
-                    currentActivityElem.textContent = "Nenhuma atividade no momento.";
-                    currentTimeSlotElem.textContent = "";
+                    element.textContent = diffInSeconds > -60 ? "Começando..." : "Evento iniciado";
+                    element.style.opacity = "0.7";
                 }
+            });
+        }
 
-                if (nextEvent) {
-                    nextActivityElem.textContent = nextEvent.activity;
-                    nextTimeSlotElem.textContent = `(${nextEvent.time} - ${nextEvent.location})`;
+        function updateDisplay() {
+            const now = new Date();
+            timeValueDisplay.textContent = now.toLocaleTimeString('pt-BR');
 
-                    const nextEventStartTimeInSeconds = (nextEvent.time.split(':').map(Number)[0] * 3600) + (nextEvent.time.split(':').map(Number)[1] * 60);
-                    let timeDiffSeconds = nextEventStartTimeInSeconds - currentTimeInSecondsToday;
+            const currentMinute = now.getMinutes();
+            if (currentMinute !== state.lastUpdatedMinute) {
+                state.lastUpdatedMinute = currentMinute;
 
-                    if (timeDiffSeconds > 0) {
-                        const minutes = Math.floor(timeDiffSeconds / 60);
-                        const seconds = timeDiffSeconds % 60;
-                        countdownNextActivity.textContent = `Começa em: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                    } else {
-                        countdownNextActivity.textContent = "Evento começou!";
-                    }
-
-                    const nextEventRowElement = Array.from(tableRows).find(row => row.dataset.originalId === nextEvent.id);
-                    if (nextEventRowElement) {
-                        nextEventRowElement.classList.add('upcoming');
-                    }
-
-                } else {
-                    nextActivityElem.textContent = "Fim da programação.";
-                    nextTimeSlotElem.textContent = "";
-                    countdownNextActivity.textContent = "";
-                }
-
-                currentTimeDisplay.textContent = `Hora Atual: ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+                const processedData = getEventStatus(now);
+                renderNowNextCards(processedData);
+                renderProgramTable(processedData);
             }
 
-            async function refreshProgramDataAndUI() {
-                program = await loadProgramFromFirestore();
-                if (programBody) {
-                    renderProgram();
-                    updateProgramStatus();
-                }
-            }
+            updateAllCountdowns();
+        }
 
-            async function initializePage() {
-                await refreshProgramDataAndUI();
+        async function initialize() {
+            await fetchData();
 
-                if (refreshProgramIntervalId) clearInterval(refreshProgramIntervalId);
-                if (updateIntervalId) clearInterval(updateIntervalId);
+            setInterval(updateDisplay, 1000);
 
-                updateIntervalId = setInterval(updateProgramStatus, 1000);
-                refreshProgramIntervalId = setInterval(refreshProgramDataAndUI, 30000);
-            }
+            setInterval(fetchData, 60000);
+        }
 
-            initializePage();
-        });
+        document.addEventListener('DOMContentLoaded', initialize);
     </script>
+
 </body>
 
 </html>

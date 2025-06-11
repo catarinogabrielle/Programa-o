@@ -11,35 +11,44 @@
 
     <style>
         :root {
-            --primary-color: #050c72;
-            --secondary-color: #476cbc;
-            --text-dark: #333333;
-            --text-light: #f8f8f8;
-            --bg-light: #ffffff;
-            --bg-gradient-start: #e0f2f7;
-            --bg-gradient-end: #a5e1cd;
-            --shadow-heavy: rgba(0, 0, 0, 0.2);
+            --bg-page: #121212;
+            --bg-card: #1E1E1E;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #EAEAEA;
+            --text-secondary: #A9A9AA;
+            --text-on-accent: #FFFFFF;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-yellow: #ffab00;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --border-radius-md: 12px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-            color: var(--text-dark);
+            padding: 20px;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            box-sizing: border-box;
-            overflow-x: hidden;
         }
 
         .login-container {
-            background-color: var(--bg-light);
+            background-color: var(--bg-card);
             padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0px 15px 30px var(--shadow-heavy);
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px var(--shadow-color);
             width: 90%;
             max-width: 400px;
             text-align: center;
@@ -52,9 +61,8 @@
         }
 
         .header-logo img {
-            max-width: 250px;
+            max-width: 200px;
             height: auto;
-            filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.486));
         }
 
         .login-container .input-group {
@@ -65,40 +73,49 @@
         .login-container label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--text-dark);
+            font-weight: 500;
+            color: var(--text-secondary);
         }
 
         .login-container input[type="text"],
         .login-container input[type="password"] {
-            width: calc(100% - 20px);
-            padding: 12px 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
             font-size: 16px;
             box-sizing: border-box;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            transition: border-color 0.3s ease;
+        }
+
+        .login-container input:focus {
+            outline: none;
+            border-color: var(--accent-yellow);
         }
 
         .login-container button {
-            background-color: var(--primary-color);
-            color: var(--text-light);
+            background-color: var(--accent-green);
+            color: var(--text-on-accent);
             border: none;
             padding: 15px 30px;
-            border-radius: 8px;
+            border-radius: var(--border-radius-sm);
             font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
             width: 100%;
             box-sizing: border-box;
         }
 
         .login-container button:hover {
-            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            filter: brightness(1.1);
         }
 
         .login-container .error-message {
-            color: #d32f2f;
+            color: var(--accent-red);
             margin-top: 15px;
             font-weight: 500;
             display: none;
@@ -107,18 +124,19 @@
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: scale(0.95);
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0px);
+                transform: scale(1);
             }
         }
 
         @media (max-width: 480px) {
             .login-container {
-                width: 75%;
+                padding: 30px;
+                width: 90%;
             }
         }
     </style>
@@ -127,7 +145,7 @@
 <body>
     <div class="login-container">
         <div class="header-logo">
-            <img src="img/logo.png" alt="Logo da Minha Empresa">
+            <img src="img/logo.png" alt="Logo do Evento">
         </div>
 
         <form id="loginForm">

@@ -5,44 +5,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin da Programação</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="icon" type="image/png" href="img/icon.png">
     <link rel="shortcut icon" href="img/icon.png" type="image/x-icon">
 
     <style>
         :root {
-            --primary-color: #050c72;
-            --secondary-color: #476cbc;
-            --text-dark: #333333;
-            --text-light: #f8f8f8;
-            --bg-light: #ffffff;
-            --bg-gradient-start: #e0f2f7;
-            --bg-gradient-end: #a5e1cd;
-            --shadow-heavy: rgba(0, 0, 0, 0.2);
-            --shadow-light: rgba(0, 0, 0, 0.08);
+            --bg-page: #121212;
+            --bg-card: #1E1E1E;
+            --bg-header: linear-gradient(90deg, #1e3a8a, #2563eb);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #EAEAEA;
+            --text-secondary: #A9A9AA;
+            --text-on-accent: #FFFFFF;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-yellow: #ffab00;
+            --neutral-gray: #555555;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --border-radius-md: 12px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-            color: var(--text-dark);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            padding: 20px 15px;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
             min-height: 100vh;
-            box-sizing: border-box;
         }
 
         .admin-container {
-            background-color: var(--bg-light);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0px 15px 30px var(--shadow-heavy);
-            width: 90%;
+            width: 100%;
             max-width: 900px;
-            margin: 30px auto;
+            margin: 25px auto 0 auto;
             animation: fadeIn 0.8s ease-out;
         }
 
@@ -56,66 +60,59 @@
         }
 
         .admin-header h1 {
-            color: var(--primary-color);
+            color: var(--text-primary);
             margin: 0;
-            font-size: 38px;
+            font-size: 32px;
             font-weight: 700;
         }
 
-        .admin-header button {
-            background-color: #d32f2f;
-            color: var(--text-light);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .admin-header button:hover {
-            background-color: #b71c1c;
-        }
-
-        .form-section {
-            background-color: #f8f8f8;
+        .form-section,
+        .program-table-section {
+            background-color: var(--bg-card);
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0px 5px 15px var(--shadow-light);
+            border-radius: var(--border-radius-md);
             margin-bottom: 30px;
-            border: 1px solid #eee;
+            border: 1px solid var(--border-color);
         }
 
-        .form-section h2 {
-            color: var(--secondary-color);
+        .form-section h2,
+        .program-table-section h2 {
+            color: var(--text-primary);
             margin-top: 0;
             margin-bottom: 20px;
-            font-size: 28px;
+            font-size: 24px;
+            font-weight: 600;
             text-align: left;
         }
 
         .form-group {
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 20px;
         }
 
         .form-group label {
-            margin-bottom: 5px;
+            display: block;
+            margin-bottom: 8px;
             font-weight: 500;
-            color: var(--text-dark);
+            color: var(--text-secondary);
         }
 
         .form-group input[type="time"],
-        .form-group input[type="text"] {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+        .form-group input[type="text"],
+        .form-group select {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
             font-size: 16px;
             width: 100%;
             box-sizing: border-box;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-yellow);
         }
 
         .form-buttons {
@@ -125,125 +122,122 @@
             flex-wrap: wrap;
         }
 
-        .form-buttons button {
-            background-color: var(--primary-color);
-            color: var(--text-light);
+        button {
+            color: var(--text-on-accent);
             border: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: var(--border-radius-sm);
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            flex-grow: 1;
-            flex-basis: calc(50% - 5px);
-            min-width: 150px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
-        .form-buttons button:hover {
-            background-color: var(--secondary-color);
+        button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
         }
 
-        .form-buttons button.clear-btn {
-            background-color: #757575;
+        button:disabled {
+            cursor: not-allowed;
+            background-color: var(--neutral-gray);
+            filter: brightness(0.7);
         }
 
-        .form-buttons button.clear-btn:hover {
-            background-color: #555555;
+        #logoutBtn {
+            background-color: var(--accent-red);
         }
 
-        .program-table-section h2 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-size: 28px;
-            text-align: left;
+        #saveLocationBtn,
+        #saveActivityBtn {
+            background-color: var(--accent-green);
+        }
+
+        #clearLocationFormBtn,
+        #clearActivityFormBtn {
+            background-color: var(--neutral-gray);
+            color: var(--text-primary);
+        }
+
+        .action-buttons button.edit-btn,
+        .action-buttons button.edit-location-btn {
+            background-color: var(--accent-yellow);
+            color: #1c1c1c;
+        }
+
+        .action-buttons button.delete-btn,
+        .action-buttons button.delete-location-btn {
+            background-color: var(--accent-red);
         }
 
         .table-responsive-wrapper {
             overflow-x: auto;
-            border-radius: 10px;
-            box-shadow: 0px 5px 15px var(--shadow-light);
-            margin-bottom: 20px;
         }
 
-        .program-table-section table {
+        .table-responsive-wrapper table {
             width: 100%;
             min-width: 600px;
-            border-collapse: collapse;
-            background-color: var(--bg-light);
+            border-collapse: separate;
+            border-spacing: 0 10px;
         }
 
-        .program-table-section th,
-        .program-table-section td {
-            padding: 12px 15px;
+        .table-responsive-wrapper th,
+        .table-responsive-wrapper td {
+            padding: 15px 20px;
             text-align: left;
-            border-bottom: 1px solid #eee;
             font-size: 16px;
-            white-space: nowrap;
+            vertical-align: middle;
         }
 
-        .program-table-section td:nth-child(2),
-        .program-table-section td:nth-child(3) {
-            white-space: normal;
+        .table-responsive-wrapper thead tr {
+            background: var(--bg-header);
         }
 
-
-        .program-table-section thead {
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            color: var(--text-light);
-        }
-
-        .program-table-section thead th:first-child {
-            border-top-left-radius: 10px;
-        }
-
-        .program-table-section thead th:last-child {
-            border-top-right-radius: 10px;
-        }
-
-        .program-table-section th {
+        .table-responsive-wrapper thead th {
+            background: transparent;
+            color: var(--text-on-accent);
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            border: none;
         }
 
-        .program-table-section tbody tr:last-child td {
-            border-bottom: none;
+        .table-responsive-wrapper thead th:first-child {
+            border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
         }
 
-        .program-table-section tbody tr:hover {
-            background-color: #f5f5f5;
+        .table-responsive-wrapper thead th:last-child {
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+        }
+
+        .table-responsive-wrapper tbody tr {
+            background-color: var(--bg-page);
+        }
+
+        .table-responsive-wrapper tbody tr:hover {
+            background-color: #2a2a2a;
+        }
+
+        .table-responsive-wrapper tbody td:first-child {
+            border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+        }
+
+        .table-responsive-wrapper tbody td:last-child {
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+        }
+
+        #locationListBody td:nth-child(2) {
+            width: 1%;
         }
 
         .action-buttons {
             display: flex;
-            gap: 5px;
-            justify-content: flex-start;
+            gap: 8px;
+            align-items: center;
         }
 
         .action-buttons button {
-            background-color: #ffab00;
-            color: var(--text-dark);
-            border: none;
-            padding: 6px 10px;
-            border-radius: 5px;
+            padding: 8px 12px;
             font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .action-buttons button:hover {
-            background-color: #e69d00;
-        }
-
-        .action-buttons button.delete-btn {
-            background-color: #d32f2f;
-            color: var(--text-light);
-        }
-
-        .action-buttons button.delete-btn:hover {
-            background-color: #b71c1c;
         }
 
         @keyframes fadeIn {
@@ -263,7 +257,7 @@
             text-align: center;
             padding: 20px;
             font-size: 18px;
-            color: var(--primary-color);
+            color: var(--text-secondary);
         }
 
         .loading-indicator.active {
@@ -271,139 +265,67 @@
         }
 
         @media (max-width: 768px) {
-            .admin-container {
-                padding: 20px;
-                margin: 20px auto;
-            }
-
-            .admin-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .admin-header h1 {
-                font-size: 30px;
-                margin-bottom: 15px;
-                text-align: center;
-            }
-
-            .admin-header button {
-                width: auto;
-                align-self: center;
-                padding: 12px 25px;
-            }
-
-            .form-section {
-                padding: 20px;
-            }
-
-            .form-section h2,
-            .program-table-section h2 {
-                font-size: 24px;
-            }
-
-            .form-group input[type="time"],
-            .form-group input[type="text"] {
-                font-size: 15px;
-            }
-
-            .form-buttons {
-                flex-direction: column;
-            }
-
-            .form-buttons button {
-                padding: 12px;
-                flex-basis: auto;
-                width: 100%;
-            }
-
-            .program-table-section table {
-                min-width: 0;
-            }
-
-            .program-table-section th,
-            .program-table-section td {
-                padding: 10px 12px;
-                font-size: 14px;
-            }
-
-            .program-table-section td:nth-child(2),
-            .program-table-section td:nth-child(3) {
-                white-space: normal;
-                min-width: 120px;
-            }
-
-            .program-table-section td:nth-child(1),
-            .program-table-section td:nth-child(4) {
-                white-space: nowrap;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .action-buttons button {
-                padding: 8px 10px;
-                font-size: 13px;
-                width: 100%;
-                box-sizing: border-box;
-                margin-bottom: 5px;
-            }
-
-            .action-buttons button:last-child {
-                margin-bottom: 0;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .admin-container {
+            body {
                 padding: 15px;
-                width: 85%;
+            }
+
+            .admin-container {
+                padding: 0;
             }
 
             .admin-header h1 {
-                font-size: 24px;
+                font-size: 28px;
             }
 
-            .admin-header button {
-                padding: 10px 20px;
-                font-size: 15px;
+            .form-section,
+            .program-table-section {
+                padding: 20px;
             }
 
             .form-section h2,
             .program-table-section h2 {
-                font-size: 20px;
+                font-size: 22px;
             }
 
-            .program-table-section th,
-            .program-table-section td {
-                font-size: 13px;
-                padding: 8px 10px;
-            }
-
-            .program-table-section td:nth-child(2),
-            .program-table-section td:nth-child(3) {
-                min-width: 100px;
-            }
-
-            .action-buttons {
-                gap: 3px;
-            }
-
-            .action-buttons button {
-                font-size: 12px;
-                padding: 6px 8px;
+            .table-responsive-wrapper table {
+                min-width: 100%;
             }
         }
     </style>
 </head>
 
-<body>
+<body class="dark-mode">
     <div class="admin-container">
         <div class="admin-header">
             <h1>Dashboard Programação</h1>
             <button id="logoutBtn">Sair</button>
+        </div>
+
+        <div class="form-section">
+            <h2>Gerenciar Locais</h2>
+            <form id="locationForm">
+                <input type="hidden" id="locationDocId">
+                <div class="form-group">
+                    <label for="locationName">Nome do Local:</label>
+                    <input type="text" id="locationName" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" id="saveLocationBtn">Adicionar Local</button>
+                    <button type="button" id="clearLocationFormBtn">Limpar</button>
+                </div>
+            </form>
+            <div class="table-responsive-wrapper" style="margin-top: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome do Local</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="locationListBody">
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="form-section">
@@ -419,12 +341,14 @@
                     <input type="text" id="activityName" required>
                 </div>
                 <div class="form-group">
-                    <label for="activityLocation">Local:</label>
-                    <input type="text" id="activityLocation" required>
+                    <label for="activityLocationSelect">Local:</label>
+                    <select id="activityLocationSelect" required>
+                        <option value="">Selecione um local</option>
+                    </select>
                 </div>
                 <div class="form-buttons">
                     <button type="submit" id="saveActivityBtn">Adicionar Atividade</button>
-                    <button type="button" id="clearFormBtn" class="clear-btn">Limpar Formulário</button>
+                    <button type="button" id="clearActivityFormBtn">Limpar</button>
                 </div>
             </form>
         </div>
@@ -466,6 +390,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const programCollectionRef = collection(db, 'eventProgram');
+        const locationsCollectionRef = collection(db, 'eventLocations');
 
         document.addEventListener('DOMContentLoaded', () => {
             const logoutBtn = document.getElementById('logoutBtn');
@@ -473,14 +398,21 @@
             const activityDocIdInput = document.getElementById('activityDocId');
             const activityTimeInput = document.getElementById('activityTime');
             const activityNameInput = document.getElementById('activityName');
-            const activityLocationInput = document.getElementById('activityLocation');
+            const activityLocationSelect = document.getElementById('activityLocationSelect');
             const saveActivityBtn = document.getElementById('saveActivityBtn');
-            const clearFormBtn = document.getElementById('clearFormBtn');
+            const clearActivityFormBtn = document.getElementById('clearActivityFormBtn');
             const adminProgramBody = document.getElementById('adminProgramBody');
             const loadingIndicator = document.getElementById('loadingIndicator');
 
+            const locationForm = document.getElementById('locationForm');
+            const locationDocIdInput = document.getElementById('locationDocId');
+            const locationNameInput = document.getElementById('locationName');
+            const saveLocationBtn = document.getElementById('saveLocationBtn');
+            const clearLocationFormBtn = document.getElementById('clearLocationFormBtn');
+            const locationListBody = document.getElementById('locationListBody');
+
             let program = [];
-            let refreshAdminIntervalId = null;
+            let locations = [];
 
             if (localStorage.getItem('loggedIn') !== 'true') {
                 alert("Você não está logado. Redirecionando para login...");
@@ -494,169 +426,229 @@
                 window.location.href = 'login.html';
             });
 
-            async function loadProgramFromFirestore() {
-                if (loadingIndicator && !adminProgramBody.querySelector('tr')) {
-                    loadingIndicator.classList.add('active');
+            async function loadLocationsFromFirestore() {
+                try {
+                    const q = query(locationsCollectionRef, orderBy("name"));
+                    const querySnapshot = await getDocs(q);
+                    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                } catch (error) {
+                    console.error("Erro ao carregar locais do Firestore: ", error);
+                    return [];
                 }
+            }
+
+            function renderLocations() {
+                if (!locationListBody) return;
+                locationListBody.innerHTML = '';
+                activityLocationSelect.innerHTML = '<option value="">Selecione um local</option>';
+
+                if (locations.length === 0) {
+                    locationListBody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Nenhum local cadastrado.</td></tr>';
+                    return;
+                }
+
+                locations.forEach(loc => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${loc.name}</td>
+                        <td class="action-buttons">
+                            <button class="edit-location-btn" data-id="${loc.id}" title="Editar Local">Editar</button>
+                            <button class="delete-location-btn" data-id="${loc.id}" title="Excluir Local">Excluir</button>
+                        </td>`;
+                    locationListBody.appendChild(row);
+
+                    const option = document.createElement('option');
+                    option.value = loc.id;
+                    option.textContent = loc.name;
+                    activityLocationSelect.appendChild(option);
+                });
+            }
+
+            locationForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveLocationBtn.disabled = true;
+                saveLocationBtn.textContent = 'Salvando...';
+
+                const name = locationNameInput.value.trim();
+                const docIdValue = locationDocIdInput.value;
+
+                if (!name) {
+                    alert("Por favor, preencha o nome do local!");
+                    saveLocationBtn.disabled = false;
+                    saveLocationBtn.textContent = 'Adicionar Local';
+                    return;
+                }
+
+                try {
+                    if (docIdValue) {
+                        await updateDoc(doc(db, "eventLocations", docIdValue), { name });
+                    } else {
+                        await addDoc(locationsCollectionRef, { name });
+                    }
+                    await refreshLocationsDataAndUI();
+                    clearLocationForm();
+                } catch (error) {
+                    console.error("Erro ao salvar local: ", error);
+                } finally {
+                    saveLocationBtn.disabled = false;
+                    saveLocationBtn.textContent = locationDocIdInput.value ? 'Salvar Edição' : 'Adicionar Local';
+                }
+            });
+
+            function clearLocationForm() {
+                locationForm.reset();
+                locationDocIdInput.value = '';
+                saveLocationBtn.textContent = 'Adicionar Local';
+                locationNameInput.focus();
+            }
+
+            clearLocationFormBtn.addEventListener('click', clearLocationForm);
+
+            locationListBody.addEventListener('click', async (e) => {
+                const targetButton = e.target.closest('button');
+                if (!targetButton) return;
+                const docIdValue = targetButton.dataset.id;
+                const item = locations.find(item => item.id === docIdValue);
+
+                if (targetButton.classList.contains('edit-location-btn')) {
+                    locationNameInput.value = item.name;
+                    locationDocIdInput.value = docIdValue;
+                    saveLocationBtn.textContent = 'Salvar Edição';
+                    locationNameInput.focus();
+                } else if (targetButton.classList.contains('delete-location-btn')) {
+                    if (confirm(`Tem certeza que deseja excluir o local "${item.name}"?`)) {
+                        targetButton.disabled = true;
+                        try {
+                            await deleteDoc(doc(db, "eventLocations", docIdValue));
+                            await refreshLocationsDataAndUI();
+                            await refreshAdminProgramDataAndTable();
+                        } catch (error) {
+                            console.error("Erro ao excluir local: ", error);
+                        }
+                    }
+                }
+            });
+
+            async function loadProgramFromFirestore() {
+                loadingIndicator.classList.add('active');
                 try {
                     const q = query(programCollectionRef, orderBy("time"));
                     const querySnapshot = await getDocs(q);
-                    let programData = [];
-                    if (!querySnapshot.empty) {
-                        querySnapshot.forEach((doc) => {
-                            programData.push({ id: doc.id, ...doc.data() });
-                        });
-                    }
-                    return programData;
+                    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 } catch (error) {
-                    console.error("Erro ao carregar programação do Firestore: ", error);
-                    if (adminProgramBody) adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Erro ao carregar programação.</td></tr>';
+                    console.error("Erro ao carregar programação: ", error);
                     return [];
                 } finally {
-                    if (loadingIndicator) loadingIndicator.classList.remove('active');
+                    loadingIndicator.classList.remove('active');
                 }
             }
 
             function renderAdminProgram() {
                 if (!adminProgramBody) return;
                 adminProgramBody.innerHTML = '';
-                if (!program || program.length === 0) {
-                    if (!loadingIndicator || !loadingIndicator.classList.contains('active')) {
-                        adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>';
-                    }
+                if (program.length === 0 && !loadingIndicator.classList.contains('active')) {
+                    adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>';
                     return;
                 }
 
-                const sortedProgram = [...program].sort((a, b) => {
-                    const [ha, ma] = a.time.split(':').map(Number);
-                    const [hb, mb] = b.time.split(':').map(Number);
-                    return (ha * 60 + ma) - (hb * 60 + mb);
-                });
-
-                sortedProgram.forEach(item => {
+                program.forEach(item => {
+                    const locationName = locations.find(loc => loc.id === item.locationId)?.name || 'N/D';
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${item.time}</td>
                         <td>${item.activity}</td>
-                        <td>${item.location}</td>
+                        <td>${locationName}</td>
                         <td class="action-buttons">
-                            <button class="edit-btn" data-id="${item.id}" title="Editar Atividade">Editar</button>
-                            <button class="delete-btn" data-id="${item.id}" title="Excluir Atividade">Excluir</button>
-                        </td>
-                    `;
+                            <button class="edit-btn" data-id="${item.id}">Editar</button>
+                            <button class="delete-btn" data-id="${item.id}">Excluir</button>
+                        </td>`;
                     adminProgramBody.appendChild(row);
                 });
             }
 
             activityForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const originalButtonText = saveActivityBtn.textContent;
                 saveActivityBtn.disabled = true;
                 saveActivityBtn.textContent = 'Salvando...';
 
-                const time = activityTimeInput.value;
-                const activity = activityNameInput.value;
-                const location = activityLocationInput.value;
+                const activityData = {
+                    time: activityTimeInput.value,
+                    activity: activityNameInput.value,
+                    locationId: activityLocationSelect.value
+                };
                 const docIdValue = activityDocIdInput.value;
 
-                if (!time || !activity || !location) {
-                    alert("Por favor, preencha todos os campos!");
+                if (!activityData.time || !activityData.activity || !activityData.locationId) {
+                    alert("Por favor, preencha todos os campos da atividade!");
                     saveActivityBtn.disabled = false;
-                    saveActivityBtn.textContent = originalButtonText;
+                    saveActivityBtn.textContent = docIdValue ? 'Salvar Edição' : 'Adicionar Atividade';
                     return;
                 }
 
-                const activityData = { time, activity, location };
-
                 try {
-                    if (docIdValue === '') {
-                        await addDoc(programCollectionRef, activityData);
+                    if (docIdValue) {
+                        await updateDoc(doc(db, "eventProgram", docIdValue), activityData);
                     } else {
-                        const docRef = doc(db, "eventProgram", docIdValue);
-                        await updateDoc(docRef, activityData);
+                        await addDoc(programCollectionRef, activityData);
                     }
-                    program = await loadProgramFromFirestore();
-                    renderAdminProgram();
-                    clearForm();
+                    await refreshAdminProgramDataAndTable();
+                    clearActivityForm();
                 } catch (error) {
                     console.error("Erro ao salvar atividade: ", error);
-                    alert("Erro ao salvar atividade. Verifique o console (F12).");
                 } finally {
                     saveActivityBtn.disabled = false;
-                    if (activityDocIdInput.value === '') {
-                        saveActivityBtn.textContent = 'Adicionar Atividade';
-                    } else {
-                        saveActivityBtn.textContent = 'Salvar Edição';
-                    }
+                    saveActivityBtn.textContent = activityDocIdInput.value ? 'Salvar Edição' : 'Adicionar Atividade';
                 }
             });
 
-            clearFormBtn.addEventListener('click', clearForm);
-
-            function clearForm() {
+            function clearActivityForm() {
                 activityForm.reset();
                 activityDocIdInput.value = '';
                 saveActivityBtn.textContent = 'Adicionar Atividade';
                 activityTimeInput.focus();
             }
 
+            clearActivityFormBtn.addEventListener('click', clearActivityForm);
+
             adminProgramBody.addEventListener('click', async (e) => {
                 const targetButton = e.target.closest('button');
                 if (!targetButton) return;
                 const docIdValue = targetButton.dataset.id;
+                const item = program.find(item => item.id === docIdValue);
 
                 if (targetButton.classList.contains('edit-btn')) {
-                    const itemToEdit = program.find(item => item.id === docIdValue);
-                    if (itemToEdit) {
-                        activityTimeInput.value = itemToEdit.time;
-                        activityNameInput.value = itemToEdit.activity;
-                        activityLocationInput.value = itemToEdit.location;
-                        activityDocIdInput.value = docIdValue;
-                        saveActivityBtn.textContent = 'Salvar Edição';
-                        activityTimeInput.focus();
-                    }
+                    activityTimeInput.value = item.time;
+                    activityNameInput.value = item.activity;
+                    activityLocationSelect.value = item.locationId;
+                    activityDocIdInput.value = docIdValue;
+                    saveActivityBtn.textContent = 'Salvar Edição';
+                    activityTimeInput.focus();
                 } else if (targetButton.classList.contains('delete-btn')) {
-                    const itemToDelete = program.find(item => item.id === docIdValue);
-                    if (itemToDelete && confirm(`Tem certeza que deseja excluir "${itemToDelete.activity}"?`)) {
+                    if (confirm(`Tem certeza que deseja excluir "${item.activity}"?`)) {
                         targetButton.disabled = true;
-                        targetButton.textContent = 'Excluindo...';
                         try {
-                            const docRef = doc(db, "eventProgram", docIdValue);
-                            await deleteDoc(docRef);
-                            program = await loadProgramFromFirestore();
-                            renderAdminProgram();
-                            if (activityDocIdInput.value === docIdValue) {
-                                clearForm();
-                            }
+                            await deleteDoc(doc(db, "eventProgram", docIdValue));
+                            await refreshAdminProgramDataAndTable();
                         } catch (error) {
                             console.error("Erro ao excluir atividade: ", error);
-                            alert("Erro ao excluir atividade. Verifique o console (F12).");
-                        } finally {
-                            const stillExistsButton = adminProgramBody.querySelector(`button.delete-btn[data-id="${docIdValue}"]`);
-                            if (stillExistsButton) {
-                                stillExistsButton.disabled = false;
-                                stillExistsButton.textContent = 'Excluir';
-                            }
                         }
                     }
                 }
             });
 
             async function refreshAdminProgramDataAndTable() {
-                const docIdInForm = activityDocIdInput.value;
-                if (docIdInForm === '') {
-                    program = await loadProgramFromFirestore();
-                    renderAdminProgram();
-                } else {
+                program = await loadProgramFromFirestore();
+                renderAdminProgram();
+            }
 
-                }
+            async function refreshLocationsDataAndUI() {
+                locations = await loadLocationsFromFirestore();
+                renderLocations();
             }
 
             async function initializeAdminPage() {
+                await refreshLocationsDataAndUI();
                 await refreshAdminProgramDataAndTable();
-
-                if (refreshAdminIntervalId) clearInterval(refreshAdminIntervalId);
-                refreshAdminIntervalId = setInterval(refreshAdminProgramDataAndTable, 3000);
             }
 
             initializeAdminPage();

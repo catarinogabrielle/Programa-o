@@ -98,6 +98,7 @@
 
         .form-group input[type="time"],
         .form-group input[type="text"],
+        .form-group input[type="number"],
         .form-group select {
             padding: 12px;
             border: 1px solid var(--border-color);
@@ -113,6 +114,23 @@
         .form-group select:focus {
             outline: none;
             border-color: var(--accent-yellow);
+        }
+
+        .form-group-checkbox {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 0, 0.05);
+            border-left: 3px solid var(--accent-yellow);
+            border-radius: var(--border-radius-sm);
+        }
+
+        .form-group-checkbox label {
+            margin-bottom: 0;
+            font-weight: 500;
+            color: var(--text-primary);
         }
 
         .form-buttons {
@@ -346,8 +364,12 @@
             <form id="activityForm">
                 <input type="hidden" id="activityDocId">
                 <div class="form-group">
-                    <label for="activityTime">Horário:</label>
+                    <label for="activityTime">Horário de Início:</label>
                     <input type="time" id="activityTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityDuration">Duração (em minutos):</label>
+                    <input type="number" id="activityDuration" min="1" placeholder="Ex: 60" required>
                 </div>
                 <div class="form-group">
                     <label for="activityName">Atividade:</label>
@@ -358,6 +380,10 @@
                     <select id="activityLocationSelect" required>
                         <option value="">Selecione um local</option>
                     </select>
+                </div>
+                <div class="form-group-checkbox" id="autoAdjustContainer">
+                    <input type="checkbox" id="autoAdjustCheckbox">
+                    <label for="autoAdjustCheckbox">Reajustar horários subsequentes</label>
                 </div>
                 <div class="form-buttons">
                     <button type="submit" id="saveActivityBtn">Adicionar Atividade</button>
@@ -387,7 +413,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8EGMHVUVTrNWY2wai3YmXE1ZrlZ6Gz6o",
@@ -420,6 +446,9 @@
             const activityForm = document.getElementById('activityForm');
             const activityDocIdInput = document.getElementById('activityDocId');
             const activityTimeInput = document.getElementById('activityTime');
+            const activityDurationInput = document.getElementById('activityDuration');
+            const autoAdjustContainer = document.getElementById('autoAdjustContainer');
+            const autoAdjustCheckbox = document.getElementById('autoAdjustCheckbox');
             const activityNameInput = document.getElementById('activityName');
             const activityLocationSelect = document.getElementById('activityLocationSelect');
             const saveActivityBtn = document.getElementById('saveActivityBtn');
@@ -429,7 +458,6 @@
             let locations = [];
             let refreshProgramIntervalId = null;
             let refreshLocationsIntervalId = null;
-
 
             if (localStorage.getItem('loggedIn') !== 'true') {
                 window.location.href = 'login.html';
@@ -570,10 +598,117 @@
                 }
             });
 
+            const timeToMinutes = (timeStr) => {
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return hours * 60 + minutes;
+            };
+            const minutesToTime = (totalMinutes) => {
+                const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+                const minutes = (totalMinutes % 60).toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            };
+
+            activityForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveActivityBtn.disabled = true;
+                saveActivityBtn.textContent = 'Salvando...';
+
+                const activityData = {
+                    time: activityTimeInput.value,
+                    duration: parseInt(activityDurationInput.value, 10),
+                    activity: activityNameInput.value,
+                    locationId: activityLocationSelect.value
+                };
+                const docIdValue = activityDocIdInput.value;
+
+                if (!activityData.time || !activityData.duration || !activityData.activity || !activityData.locationId) {
+                    alert("Por favor, preencha todos os campos da atividade!");
+                    saveActivityBtn.disabled = false;
+                    saveActivityBtn.textContent = 'Adicionar Atividade';
+                    return;
+                }
+
+                if (docIdValue && autoAdjustCheckbox.checked) {
+                    try {
+                        const batch = writeBatch(db);
+                        const sortedProgram = [...program].sort((a, b) => a.time.localeCompare(b.time));
+                        const editedItemIndex = sortedProgram.findIndex(item => item.id === docIdValue);
+                        if (editedItemIndex === -1) throw new Error("Item editado não foi encontrado.");
+
+                        const editedDocRef = doc(db, "eventProgram", docIdValue);
+                        batch.update(editedDocRef, activityData);
+
+                        let lastEndTimeInMinutes = timeToMinutes(activityData.time) + activityData.duration;
+
+                        for (let i = editedItemIndex + 1; i < sortedProgram.length; i++) {
+                            const currentItem = sortedProgram[i];
+                            const newStartTime = minutesToTime(lastEndTimeInMinutes);
+                            batch.update(doc(db, "eventProgram", currentItem.id), { time: newStartTime });
+                            lastEndTimeInMinutes += currentItem.duration;
+                        }
+
+                        await batch.commit();
+                        alert('Programação reajustada com sucesso!');
+                    } catch (error) {
+                        console.error("Erro no reajuste automático: ", error);
+                        alert("Ocorreu um erro ao reajustar os horários.");
+                    }
+                } else {
+                    try {
+                        if (docIdValue) {
+                            await updateDoc(doc(db, "eventProgram", docIdValue), activityData);
+                        } else {
+                            await addDoc(programCollectionRef, activityData);
+                        }
+                    } catch (error) {
+                        console.error("Erro ao salvar atividade: ", error);
+                    }
+                }
+
+                await refreshAdminProgramDataAndTable();
+                clearActivityForm();
+                saveActivityBtn.disabled = false;
+                saveActivityBtn.textContent = 'Adicionar Atividade';
+            });
+
+            function clearActivityForm() {
+                activityForm.reset();
+                activityDocIdInput.value = '';
+                saveActivityBtn.textContent = 'Adicionar Atividade';
+                autoAdjustContainer.style.display = 'none';
+                autoAdjustCheckbox.checked = false;
+                activityTimeInput.focus();
+            }
+
+            clearActivityFormBtn.addEventListener('click', clearActivityForm);
+
+            adminProgramBody.addEventListener('click', async (e) => {
+                const targetButton = e.target.closest('button');
+                if (!targetButton) return;
+                const docIdValue = targetButton.dataset.id;
+                const item = program.find(item => item.id === docIdValue);
+
+                if (targetButton.classList.contains('edit-btn')) {
+                    activityTimeInput.value = item.time;
+                    activityDurationInput.value = item.duration || '';
+                    activityNameInput.value = item.activity;
+                    activityLocationSelect.value = item.locationId;
+                    activityDocIdInput.value = docIdValue;
+                    saveActivityBtn.textContent = 'Salvar Edição';
+                    autoAdjustContainer.style.display = 'flex';
+                    activityTimeInput.focus();
+                } else if (targetButton.classList.contains('delete-btn')) {
+                    if (confirm(`Tem certeza que deseja excluir "${item.activity}"?`)) {
+                        await deleteDoc(doc(db, "eventProgram", docIdValue));
+                        await refreshAdminProgramDataAndTable();
+                    }
+                }
+            });
+
             async function loadProgramFromFirestore() {
                 loadingIndicator.classList.add('active');
                 try {
-                    const q = query(programCollectionRef, orderBy("time"));
+                    const q = query(programCollectionRef);
                     const querySnapshot = await getDocs(q);
                     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 } catch (error) {
@@ -608,75 +743,6 @@
                 });
             }
 
-            activityForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                saveActivityBtn.disabled = true;
-                saveActivityBtn.textContent = 'Salvando...';
-
-                const activityData = {
-                    time: activityTimeInput.value,
-                    activity: activityNameInput.value,
-                    locationId: activityLocationSelect.value
-                };
-                const docIdValue = activityDocIdInput.value;
-
-                if (!activityData.time || !activityData.activity || !activityData.locationId) {
-                    alert("Por favor, preencha todos os campos da atividade!");
-                    saveActivityBtn.disabled = false;
-                    saveActivityBtn.textContent = docIdValue ? 'Salvar Edição' : 'Adicionar Atividade';
-                    return;
-                }
-
-                try {
-                    if (docIdValue) {
-                        await updateDoc(doc(db, "eventProgram", docIdValue), activityData);
-                    } else {
-                        await addDoc(programCollectionRef, activityData);
-                    }
-                    await refreshAdminProgramDataAndTable();
-                    clearActivityForm();
-                } catch (error) {
-                    console.error("Erro ao salvar atividade: ", error);
-                } finally {
-                    saveActivityBtn.disabled = false;
-                    saveActivityBtn.textContent = activityDocIdInput.value ? 'Salvar Edição' : 'Adicionar Atividade';
-                }
-            });
-
-            function clearActivityForm() {
-                activityForm.reset();
-                activityDocIdInput.value = '';
-                saveActivityBtn.textContent = 'Adicionar Atividade';
-                activityTimeInput.focus();
-            }
-
-            clearActivityFormBtn.addEventListener('click', clearActivityForm);
-
-            adminProgramBody.addEventListener('click', async (e) => {
-                const targetButton = e.target.closest('button');
-                if (!targetButton) return;
-                const docIdValue = targetButton.dataset.id;
-                const item = program.find(item => item.id === docIdValue);
-
-                if (targetButton.classList.contains('edit-btn')) {
-                    activityTimeInput.value = item.time;
-                    activityNameInput.value = item.activity;
-                    activityLocationSelect.value = item.locationId;
-                    activityDocIdInput.value = docIdValue;
-                    saveActivityBtn.textContent = 'Salvar Edição';
-                    activityTimeInput.focus();
-                } else if (targetButton.classList.contains('delete-btn')) {
-                    if (confirm(`Tem certeza que deseja excluir "${item.activity}"?`)) {
-                        try {
-                            await deleteDoc(doc(db, "eventProgram", docIdValue));
-                            await refreshAdminProgramDataAndTable();
-                        } catch (error) {
-                            console.error("Erro ao excluir atividade: ", error);
-                        }
-                    }
-                }
-            });
-
             async function refreshAdminProgramDataAndTable() {
                 program = await loadProgramFromFirestore();
                 renderAdminProgram();
@@ -693,10 +759,10 @@
                 await refreshAdminProgramDataAndTable();
 
                 if (refreshProgramIntervalId) clearInterval(refreshProgramIntervalId);
-                refreshProgramIntervalId = setInterval(refreshAdminProgramDataAndTable, 10000);
+                refreshProgramIntervalId = setInterval(refreshAdminProgramDataAndTable, 1000);
 
                 if (refreshLocationsIntervalId) clearInterval(refreshLocationsIntervalId);
-                refreshLocationsIntervalId = setInterval(refreshLocationsDataAndUI, 30000);
+                refreshLocationsIntervalId = setInterval(refreshLocationsDataAndUI, 3000);
             }
 
             initializeAdminPage();

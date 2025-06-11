@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Programação do Evento</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
@@ -59,7 +58,7 @@
 
         .header {
             text-align: center;
-            margin: 25px 0;
+            margin-bottom: 25px;
         }
 
         .header-logo {
@@ -297,7 +296,6 @@
 </head>
 
 <body class="dark-mode">
-
     <div class="container">
         <header class="header">
             <img src="img/logo.png" alt="Logo do Evento" class="header-logo">
@@ -371,6 +369,7 @@
         const programBody = document.getElementById('program-body');
 
         const timeToMinutes = (timeString) => {
+            if (!timeString) return 0;
             const [hours, minutes] = timeString.split(':').map(Number);
             return hours * 60 + minutes;
         };
@@ -379,7 +378,7 @@
             try {
                 const [locationsSnapshot, programSnapshot, configDoc] = await Promise.all([
                     getDocs(query(locationsCollectionRef, orderBy("name"))),
-                    getDocs(query(programCollectionRef, orderBy("time"))),
+                    getDocs(query(programCollectionRef)),
                     getDoc(siteConfigRef)
                 ]);
 
@@ -406,25 +405,25 @@
 
         function getEventStatus(now) {
             const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
-
             const scheduleWithStatus = state.program.map(item => ({ ...item, status: 'past' }));
-            const uniqueTimes = [...new Set(state.program.map(item => item.time))].sort((a, b) => a.localeCompare(b));
 
             let nowTime = null;
             let nextTime = null;
 
-            for (let i = 0; i < uniqueTimes.length; i++) {
-                const startTime = timeToMinutes(uniqueTimes[i]);
-                const endTime = (i < uniqueTimes.length - 1) ? timeToMinutes(uniqueTimes[i + 1]) : startTime + 60;
+            const sortedProgram = [...state.program].sort((a, b) => a.time.localeCompare(b.time));
+
+            for (const item of sortedProgram) {
+                const startTime = timeToMinutes(item.time);
+                const endTime = startTime + (item.duration || 60);
 
                 if (currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime) {
-                    nowTime = uniqueTimes[i];
-                    nextTime = uniqueTimes[i + 1] || null;
-                    break;
+                    nowTime = item.time;
                 }
-                if (currentTimeInMinutes < startTime) {
-                    nextTime = uniqueTimes[i];
-                    break;
+
+                if (startTime > currentTimeInMinutes) {
+                    if (!nextTime) {
+                        nextTime = item.time;
+                    }
                 }
             }
 
@@ -483,8 +482,10 @@
                 return;
             }
 
+            const sortedSchedule = [...schedule].sort((a, b) => a.time.localeCompare(b.time));
+
             const fragment = new DocumentFragment();
-            schedule.forEach(item => {
+            sortedSchedule.forEach(item => {
                 const locationName = state.locations.find(loc => loc.id === item.locationId)?.name || 'N/A';
                 const row = document.createElement('tr');
 
@@ -543,13 +544,11 @@
             await fetchData();
 
             setInterval(updateDisplay, 1000);
-
             setInterval(fetchData, 3000);
         }
 
         document.addEventListener('DOMContentLoaded', initialize);
     </script>
-
 </body>
 
 </html>

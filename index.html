@@ -304,7 +304,7 @@
             <h1 id="pageTitle">Programação</h1>
         </header>
 
-        <main>
+        <main id="main-content">
             <section id="current-time-display" class="panel">
                 <div class="time-clock" aria-live="polite">
                     <span id="time-value">--:--:--</span>
@@ -359,9 +359,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const programCollectionRef = collection(db, 'eventProgram');
-        const locationsCollectionRef = collection(db, 'eventLocations');
-        const siteConfigRef = doc(db, 'site_config', 'main_settings');
 
         const state = {
             program: [],
@@ -371,6 +368,7 @@
 
         const pageTitleElement = document.getElementById('pageTitle');
         const headerLogo = document.getElementById('headerLogo');
+        const mainContent = document.getElementById('main-content');
         const timeValueDisplay = document.getElementById('time-value');
         const nowNextDisplayContainer = document.getElementById('now-next-display');
         const programBody = document.getElementById('program-body');
@@ -382,7 +380,11 @@
             return hours * 60 + minutes;
         };
 
-        async function fetchData() {
+        async function fetchData(userId) {
+            const programCollectionRef = collection(db, 'user_data', userId, 'eventProgram');
+            const locationsCollectionRef = collection(db, 'user_data', userId, 'eventLocations');
+            const siteConfigRef = doc(db, 'user_data', userId, 'site_config', 'main_settings');
+
             try {
                 const [locationsSnapshot, programSnapshot, configDoc] = await Promise.all([
                     getDocs(query(locationsCollectionRef, orderBy("name"))),
@@ -409,10 +411,12 @@
                 state.lastUpdatedMinute = -1;
                 updateDisplay();
 
+                setInterval(updateDisplay, 1000);
+                setInterval(() => fetchData(userId), 10000);
+
             } catch (error) {
                 console.error("Erro ao carregar dados do Firestore: ", error);
-                pageTitleElement.textContent = "Erro ao Carregar";
-                programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Erro ao carregar a programação.</td></tr>';
+                mainContent.innerHTML = `<h2 style="text-align: center;">Erro ao carregar a programação. Verifique se o ID do evento na URL está correto.</h2>`;
             }
         }
 
@@ -422,7 +426,6 @@
             let nowTime = null;
             let nextTime = null;
             const sortedProgram = [...state.program].sort((a, b) => a.time.localeCompare(b.time));
-
             for (const item of sortedProgram) {
                 const startTime = timeToMinutes(item.time);
                 const endTime = startTime + (item.duration || 60);
@@ -433,22 +436,18 @@
                     nextTime = item.time;
                 }
             }
-
             scheduleWithStatus.forEach(item => {
                 if (item.time === nowTime) item.status = 'now';
                 else if (item.time === nextTime) item.status = 'next';
             });
-
             return { schedule: scheduleWithStatus };
         }
 
         function renderNowNextCards(now) {
             nowNextDisplayContainer.innerHTML = '';
             if (!state.locations || state.locations.length === 0) return;
-
             const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
             const fragment = document.createDocumentFragment();
-
             const locationsWithEventData = [];
             state.locations.forEach(loc => {
                 const eventsForLocation = state.program.filter(p => p.locationId === loc.id);
@@ -457,62 +456,33 @@
                     const endTime = startTime + (event.duration || 60);
                     return currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
                 });
-                const nextEvent = eventsForLocation
-                    .filter(event => timeToMinutes(event.time) > currentTimeInMinutes)
-                    .sort((a, b) => a.time.localeCompare(b.time))[0];
-
+                const nextEvent = eventsForLocation.filter(event => timeToMinutes(event.time) > currentTimeInMinutes).sort((a, b) => a.time.localeCompare(b.time))[0];
                 if (currentEvent || nextEvent) {
-                    locationsWithEventData.push({
-                        location: loc,
-                        currentEvent: currentEvent || null,
-                        nextEvent: nextEvent || null
-                    });
+                    locationsWithEventData.push({ location: loc, currentEvent: currentEvent || null, nextEvent: nextEvent || null });
                 }
             });
-
             locationsWithEventData.sort((a, b) => {
                 if (a.currentEvent && !b.currentEvent) return -1;
                 if (!a.currentEvent && b.currentEvent) return 1;
-
                 const aNextTime = a.nextEvent ? timeToMinutes(a.nextEvent.time) : Infinity;
                 const bNextTime = b.nextEvent ? timeToMinutes(b.nextEvent.time) : Infinity;
-
                 if (aNextTime < bNextTime) return -1;
                 if (aNextTime > bNextTime) return 1;
-
                 return a.location.name.localeCompare(b.location.name);
             });
-
             locationsWithEventData.forEach(data => {
                 const { location, currentEvent, nextEvent } = data;
-
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'now-next-group panel';
-
                 const createCard = (event, type) => {
-                    if (!event) {
-                        return `<div class="card no-activity"><p>Nenhuma atividade agendada</p></div>`;
-                    }
+                    if (!event) return `<div class="card no-activity"><p>Nenhuma atividade agendada</p></div>`;
                     const cardClass = type === 'now' ? 'current-activity' : 'next-activity';
                     const countdownHtml = type === 'next' ? `<p class="countdown" data-starttime="${event.time}"></p>` : '';
-                    return `
-                        <div class="card ${cardClass}">
-                            <p class="time-slot">${event.time}</p>
-                            <p class="activity-name">${event.activity}</p>
-                            ${countdownHtml}
-                        </div>`;
+                    return `<div class="card ${cardClass}"><p class="time-slot">${event.time}</p><p class="activity-name">${event.activity}</p>${countdownHtml}</div>`;
                 };
-
-                groupDiv.innerHTML = `
-                    <div class="group-title">${location.name}</div>
-                    <div class="cards-container">
-                        ${createCard(currentEvent, 'now')}
-                        ${createCard(nextEvent, 'next')}
-                    </div>
-                `;
+                groupDiv.innerHTML = `<div class="group-title">${location.name}</div><div class="cards-container">${createCard(currentEvent, 'now')}${createCard(nextEvent, 'next')}</div>`;
                 fragment.appendChild(groupDiv);
             });
-
             nowNextDisplayContainer.appendChild(fragment);
         }
 
@@ -522,21 +492,16 @@
                 programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhuma programação disponível.</td></tr>';
                 return;
             }
-
             const sortedSchedule = [...schedule].sort((a, b) => a.time.localeCompare(b.time));
             const fragment = new DocumentFragment();
-
             sortedSchedule.forEach(item => {
                 const locationName = state.locations.find(loc => loc.id === item.locationId)?.name || 'N/A';
                 const row = document.createElement('tr');
-
                 if (item.status === 'now') row.className = 'active-row';
                 else if (item.status === 'next') row.className = 'upcoming-row';
-
                 row.innerHTML = `<td>${item.time}</td><td>${item.activity}</td><td>${locationName}</td>`;
                 fragment.appendChild(row);
             });
-
             programBody.appendChild(fragment);
         }
 
@@ -544,12 +509,10 @@
             document.querySelectorAll('.countdown').forEach(element => {
                 const startTime = element.dataset.starttime;
                 if (!startTime) return;
-
                 const [hours, minutes] = startTime.split(':').map(Number);
                 const now = new Date();
                 const eventTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
                 const diffInSeconds = Math.floor((eventTime - now) / 1000);
-
                 if (diffInSeconds > 0) {
                     const s = diffInSeconds % 60;
                     const m = Math.floor(diffInSeconds / 60) % 60;
@@ -564,11 +527,9 @@
         function updateDisplay() {
             const now = new Date();
             timeValueDisplay.textContent = now.toLocaleTimeString('pt-BR');
-
             const currentMinute = now.getMinutes();
             if (currentMinute !== state.lastUpdatedMinute) {
                 state.lastUpdatedMinute = currentMinute;
-
                 if (state.program.length > 0) {
                     const processedDataForTable = getEventStatus(now);
                     renderProgramTable(processedDataForTable);
@@ -578,10 +539,15 @@
             updateAllCountdowns();
         }
 
-        async function initialize() {
-            await fetchData();
-            setInterval(updateDisplay, 1000);
-            setInterval(fetchData, 10000);
+        function initialize() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventUserId = urlParams.get('evento');
+
+            if (eventUserId) {
+                fetchData(eventUserId);
+            } else {
+                mainContent.innerHTML = `<h2 style="text-align: center;">Nenhum evento especificado.</h2><p style="text-align: center;">Por favor, use um link com o ID do evento (ex: ?evento=ID_DO_USUARIO).</p>`;
+            }
         }
 
         document.addEventListener('DOMContentLoaded', initialize);

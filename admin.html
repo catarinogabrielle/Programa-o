@@ -292,6 +292,21 @@
             display: block;
         }
 
+        .url-copy-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .url-copy-wrapper input {
+            flex-grow: 1;
+        }
+
+        #copyUrlBtn {
+            background-color: #2563eb;
+            flex-shrink: 0;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 15px;
@@ -323,106 +338,122 @@
 </head>
 
 <body class="dark-mode">
-    <div class="admin-container">
-        <div class="admin-header">
-            <h1>Dashboard Programação</h1>
-            <button id="logoutBtn">Sair</button>
-        </div>
+    <div id="loader">
+        <h2 style="text-align: center; padding-top: 50px;">Verificando autenticação...</h2>
+    </div>
 
-        <div class="form-section">
-            <h2>Configurações Gerais</h2>
-            <form id="siteConfigForm">
-                <div class="form-group">
-                    <label for="pageTitleInput">Título da Página Principal:</label>
-                    <input type="text" id="pageTitleInput" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="logoUploadInput">Logo do Evento (deixe em branco para manter a atual)</label>
-                    <input type="file" id="logoUploadInput" accept="image/png, image/jpeg, image/gif, image/svg+xml">
-                    <img id="logoPreview" src="" alt="Pré-visualização da logo" style="display: none;">
-                </div>
-
-                <div class="form-buttons">
-                    <button type="submit" id="saveConfigBtn">Salvar Configurações</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="form-section">
-            <h2>Gerenciar Locais</h2>
-            <form id="locationForm">
-                <input type="hidden" id="locationDocId">
-                <div class="form-group">
-                    <label for="locationName">Nome do Local:</label>
-                    <input type="text" id="locationName" required>
-                </div>
-                <div class="form-buttons">
-                    <button type="submit" id="saveLocationBtn">Adicionar Local</button>
-                    <button type="button" id="clearLocationFormBtn">Limpar</button>
-                </div>
-            </form>
-            <div class="table-responsive-wrapper" style="margin-top: 20px;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nome do Local</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="locationListBody"></tbody>
-                </table>
+    <div id="main-content" style="display: none;">
+        <div class="admin-container">
+            <div class="admin-header">
+                <h1>Dashboard Programação</h1>
+                <button id="logoutBtn">Sair</button>
             </div>
-        </div>
 
-        <div class="form-section">
-            <h2>Adicionar/Editar Atividade</h2>
-            <form id="activityForm">
-                <input type="hidden" id="activityDocId">
-                <div class="form-group">
-                    <label for="activityTime">Horário de Início:</label>
-                    <input type="time" id="activityTime" required>
-                </div>
-                <div class="form-group">
-                    <label for="activityDuration">Duração (em minutos):</label>
-                    <input type="number" id="activityDuration" min="1" placeholder="Ex: 60" required>
-                </div>
-                <div class="form-group">
-                    <label for="activityName">Atividade:</label>
-                    <input type="text" id="activityName" required>
-                </div>
-                <div class="form-group">
-                    <label for="activityLocationSelect">Local:</label>
-                    <select id="activityLocationSelect" required>
-                        <option value="">Selecione um local</option>
-                    </select>
-                </div>
-                <div class="form-group-checkbox" id="autoAdjustContainer">
-                    <input type="checkbox" id="autoAdjustCheckbox">
-                    <label for="autoAdjustCheckbox">Reajustar horários subsequentes</label>
-                </div>
-                <div class="form-buttons">
-                    <button type="submit" id="saveActivityBtn">Adicionar Atividade</button>
-                    <button type="button" id="clearActivityFormBtn">Limpar</button>
-                </div>
-            </form>
-        </div>
+            <div class="form-section">
+                <h2>Configurações Gerais</h2>
+                <form id="siteConfigForm">
+                    <div class="form-group">
+                        <label for="pageTitleInput">Título da Página Principal:</label>
+                        <input type="text" id="pageTitleInput" required>
+                    </div>
 
-        <div class="program-table-section">
-            <h2>Programação Atual</h2>
-            <div class="loading-indicator" id="loadingIndicator">Carregando programação...</div>
-            <div class="table-responsive-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Horário</th>
-                            <th>Atividade</th>
-                            <th>Local</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminProgramBody"></tbody>
-                </table>
+                    <div class="form-group">
+                        <label for="logoUploadInput">Logo do Evento (deixe em branco para manter a atual)</label>
+                        <input type="file" id="logoUploadInput"
+                            accept="image/png, image/jpeg, image/gif, image/svg+xml">
+                        <img id="logoPreview" src="" alt="Pré-visualização da logo" style="display: none;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventUrlInput">URL para compartilhar seu evento:</label>
+                        <div class="url-copy-wrapper">
+                            <input type="text" id="eventUrlInput" readonly>
+                            <button type="button" id="copyUrlBtn">Copiar URL</button>
+                        </div>
+                        <span id="copyUrlFeedback"
+                            style="display: none; color: var(--accent-green); margin-top: 8px;">URL Copiada!</span>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" id="saveConfigBtn">Salvar Configurações</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="form-section">
+                <h2>Gerenciar Locais</h2>
+                <form id="locationForm">
+                    <input type="hidden" id="locationDocId">
+                    <div class="form-group">
+                        <label for="locationName">Nome do Local:</label>
+                        <input type="text" id="locationName" required>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" id="saveLocationBtn">Adicionar Local</button>
+                        <button type="button" id="clearLocationFormBtn">Limpar</button>
+                    </div>
+                </form>
+                <div class="table-responsive-wrapper" style="margin-top: 20px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome do Local</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="locationListBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Adicionar/Editar Atividade</h2>
+                <form id="activityForm">
+                    <input type="hidden" id="activityDocId">
+                    <div class="form-group">
+                        <label for="activityTime">Horário de Início:</label>
+                        <input type="time" id="activityTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="activityDuration">Duração (em minutos):</label>
+                        <input type="number" id="activityDuration" min="1" placeholder="Ex: 60" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="activityName">Atividade:</label>
+                        <input type="text" id="activityName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="activityLocationSelect">Local:</label>
+                        <select id="activityLocationSelect" required>
+                            <option value="">Selecione um local</option>
+                        </select>
+                    </div>
+                    <div class="form-group-checkbox" id="autoAdjustContainer">
+                        <input type="checkbox" id="autoAdjustCheckbox">
+                        <label for="autoAdjustCheckbox">Reajustar horários subsequentes</label>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" id="saveActivityBtn">Adicionar Atividade</button>
+                        <button type="button" id="clearActivityFormBtn">Limpar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="program-table-section">
+                <h2>Programação Atual</h2>
+                <div class="loading-indicator" id="loadingIndicator">Carregando programação...</div>
+                <div class="table-responsive-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Horário</th>
+                                <th>Atividade</th>
+                                <th>Local</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminProgramBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -430,6 +461,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8EGMHVUVTrNWY2wai3YmXE1ZrlZ6Gz6o",
@@ -442,28 +474,48 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const programCollectionRef = collection(db, 'eventProgram');
-        const locationsCollectionRef = collection(db, 'eventLocations');
-        const siteConfigRef = doc(db, 'site_config', 'main_settings');
+        const auth = getAuth(app);
 
-        document.addEventListener('DOMContentLoaded', () => {
+        const loader = document.getElementById('loader');
+        const mainContent = document.getElementById('main-content');
+
+        let currentUserId = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserId = user.uid;
+
+                loader.style.display = 'none';
+                mainContent.style.display = 'block';
+                runAdminLogic();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        function runAdminLogic() {
+            const programCollectionRef = collection(db, 'user_data', currentUserId, 'eventProgram');
+            const locationsCollectionRef = collection(db, 'user_data', currentUserId, 'eventLocations');
+            const siteConfigRef = doc(db, 'user_data', currentUserId, 'site_config', 'main_settings');
+
+            const eventUrlInput = document.getElementById('eventUrlInput');
+            const copyUrlBtn = document.getElementById('copyUrlBtn');
+            const copyUrlFeedback = document.getElementById('copyUrlFeedback');
+
             const logoutBtn = document.getElementById('logoutBtn');
             const adminProgramBody = document.getElementById('adminProgramBody');
             const loadingIndicator = document.getElementById('loadingIndicator');
-
             const siteConfigForm = document.getElementById('siteConfigForm');
             const pageTitleInput = document.getElementById('pageTitleInput');
             const logoUploadInput = document.getElementById('logoUploadInput');
             const logoPreview = document.getElementById('logoPreview');
             const saveConfigBtn = document.getElementById('saveConfigBtn');
-
             const locationForm = document.getElementById('locationForm');
             const locationDocIdInput = document.getElementById('locationDocId');
             const locationNameInput = document.getElementById('locationName');
             const saveLocationBtn = document.getElementById('saveLocationBtn');
             const clearLocationFormBtn = document.getElementById('clearLocationFormBtn');
             const locationListBody = document.getElementById('locationListBody');
-
             const activityForm = document.getElementById('activityForm');
             const activityDocIdInput = document.getElementById('activityDocId');
             const activityTimeInput = document.getElementById('activityTime');
@@ -478,14 +530,27 @@
             let program = [];
             let locations = [];
 
-            if (localStorage.getItem('loggedIn') !== 'true') {
-                window.location.href = 'login.html';
-                return;
-            }
+            //const baseURL = `${window.location.origin}/index.html`;
+            const baseURL = 'https://pgmt.tec.br/index.html';
+            const eventURL = `${baseURL}?evento=${currentUserId}`;
+            eventUrlInput.value = eventURL;
+
+            copyUrlBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(eventUrlInput.value).then(() => {
+                    copyUrlFeedback.style.display = 'inline';
+                    copyUrlBtn.textContent = 'Copiado!';
+                    setTimeout(() => {
+                        copyUrlFeedback.style.display = 'none';
+                        copyUrlBtn.textContent = 'Copiar URL';
+                    }, 2500);
+                }).catch(err => {
+                    console.error('Falha ao copiar a URL: ', err);
+                    alert('Não foi possível copiar a URL.');
+                });
+            });
 
             logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('loggedIn');
-                window.location.href = 'login.html';
+                signOut(auth).catch(error => console.error("Erro no logout:", error));
             });
 
             async function loadSiteConfig() {
@@ -493,17 +558,13 @@
                     const docSnap = await getDoc(siteConfigRef);
                     if (docSnap.exists()) {
                         const config = docSnap.data();
-                        if (config.pageTitle) {
-                            pageTitleInput.value = config.pageTitle;
-                        }
+                        if (config.pageTitle) pageTitleInput.value = config.pageTitle;
                         if (config.logoBase64) {
                             logoPreview.src = config.logoBase64;
                             logoPreview.style.display = 'block';
                         }
                     }
-                } catch (error) {
-                    console.error("Erro ao carregar configurações do site:", error);
-                }
+                } catch (error) { console.error("Erro ao carregar configurações do site:", error); }
             }
 
             logoUploadInput.addEventListener('change', (e) => {
@@ -522,14 +583,9 @@
                 e.preventDefault();
                 saveConfigBtn.disabled = true;
                 saveConfigBtn.textContent = 'Salvando...';
-
                 const newTitle = pageTitleInput.value.trim();
                 const file = logoUploadInput.files[0];
-
-                const configToSave = {
-                    pageTitle: newTitle,
-                };
-
+                const configToSave = { pageTitle: newTitle };
                 try {
                     if (file) {
                         const base64String = await new Promise((resolve, reject) => {
@@ -540,13 +596,11 @@
                         });
                         configToSave.logoBase64 = base64String;
                     }
-
                     await setDoc(siteConfigRef, configToSave, { merge: true });
                     alert('Configurações salvas com sucesso!');
-
                 } catch (error) {
                     console.error("Erro ao salvar configurações:", error);
-                    alert('Ocorreu um erro ao salvar as configurações. Verifique o console.');
+                    alert('Ocorreu um erro ao salvar as configurações.');
                 } finally {
                     saveConfigBtn.disabled = false;
                     saveConfigBtn.textContent = 'Salvar Configurações';
@@ -567,12 +621,10 @@
             function renderLocations() {
                 locationListBody.innerHTML = '';
                 activityLocationSelect.innerHTML = '<option value="">Selecione um local</option>';
-
                 if (locations.length === 0) {
-                    locationListBody.innerHTML = '<tr><td colspan="2" style="text-align:center;">Nenhum local cadastrado.</td></tr>';
+                    locationListBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">Nenhum local cadastrado.</td></tr>`;
                     return;
                 }
-
                 locations.forEach(loc => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -582,7 +634,6 @@
                             <button class="delete-location-btn" data-id="${loc.id}">Excluir</button>
                         </td>`;
                     locationListBody.appendChild(row);
-
                     const option = document.createElement('option');
                     option.value = loc.id;
                     option.textContent = loc.name;
@@ -596,20 +647,15 @@
                 saveLocationBtn.textContent = 'Salvando...';
                 const name = locationNameInput.value.trim();
                 const docIdValue = locationDocIdInput.value;
-
                 if (!name) {
                     alert("Por favor, preencha o nome do local!");
                     saveLocationBtn.disabled = false;
                     saveLocationBtn.textContent = 'Adicionar Local';
                     return;
                 }
-
                 try {
-                    if (docIdValue) {
-                        await updateDoc(doc(db, "eventLocations", docIdValue), { name });
-                    } else {
-                        await addDoc(locationsCollectionRef, { name });
-                    }
+                    if (docIdValue) await updateDoc(doc(db, locationsCollectionRef, docIdValue), { name });
+                    else await addDoc(locationsCollectionRef, { name });
                     await refreshLocationsDataAndUI();
                     clearLocationForm();
                 } catch (error) {
@@ -626,7 +672,6 @@
                 saveLocationBtn.textContent = 'Adicionar Local';
                 locationNameInput.focus();
             }
-
             clearLocationFormBtn.addEventListener('click', clearLocationForm);
 
             locationListBody.addEventListener('click', async (e) => {
@@ -634,7 +679,6 @@
                 if (!target) return;
                 const docId = target.dataset.id;
                 const location = locations.find(l => l.id === docId);
-
                 if (target.classList.contains('edit-location-btn')) {
                     locationNameInput.value = location.name;
                     locationDocIdInput.value = location.id;
@@ -643,12 +687,10 @@
                 } else if (target.classList.contains('delete-location-btn')) {
                     if (confirm(`Tem certeza que deseja excluir o local "${location.name}"?`)) {
                         try {
-                            await deleteDoc(doc(db, "eventLocations", docId));
+                            await deleteDoc(doc(db, locationsCollectionRef, docId));
                             await refreshLocationsDataAndUI();
                             await refreshAdminProgramDataAndTable();
-                        } catch (error) {
-                            console.error("Erro ao excluir local:", error);
-                        }
+                        } catch (error) { console.error("Erro ao excluir local:", error); }
                     }
                 }
             });
@@ -667,41 +709,29 @@
                 e.preventDefault();
                 saveActivityBtn.disabled = true;
                 saveActivityBtn.textContent = 'Salvando...';
-
-                const activityData = {
-                    time: activityTimeInput.value,
-                    duration: parseInt(activityDurationInput.value, 10),
-                    activity: activityNameInput.value,
-                    locationId: activityLocationSelect.value
-                };
+                const activityData = { time: activityTimeInput.value, duration: parseInt(activityDurationInput.value, 10), activity: activityNameInput.value, locationId: activityLocationSelect.value };
                 const docIdValue = activityDocIdInput.value;
-
                 if (!activityData.time || !activityData.duration || !activityData.activity || !activityData.locationId) {
                     alert("Por favor, preencha todos os campos da atividade!");
                     saveActivityBtn.disabled = false;
                     saveActivityBtn.textContent = 'Adicionar Atividade';
                     return;
                 }
-
                 if (docIdValue && autoAdjustCheckbox.checked) {
                     try {
                         const batch = writeBatch(db);
                         const sortedProgram = [...program].sort((a, b) => a.time.localeCompare(b.time));
                         const editedItemIndex = sortedProgram.findIndex(item => item.id === docIdValue);
                         if (editedItemIndex === -1) throw new Error("Item editado não foi encontrado.");
-
-                        const editedDocRef = doc(db, "eventProgram", docIdValue);
+                        const editedDocRef = doc(db, programCollectionRef, docIdValue);
                         batch.update(editedDocRef, activityData);
-
                         let lastEndTimeInMinutes = timeToMinutes(activityData.time) + activityData.duration;
-
                         for (let i = editedItemIndex + 1; i < sortedProgram.length; i++) {
                             const currentItem = sortedProgram[i];
                             const newStartTime = minutesToTime(lastEndTimeInMinutes);
-                            batch.update(doc(db, "eventProgram", currentItem.id), { time: newStartTime });
+                            batch.update(doc(db, programCollectionRef, currentItem.id), { time: newStartTime });
                             lastEndTimeInMinutes += currentItem.duration;
                         }
-
                         await batch.commit();
                         alert('Programação reajustada com sucesso!');
                     } catch (error) {
@@ -710,16 +740,10 @@
                     }
                 } else {
                     try {
-                        if (docIdValue) {
-                            await updateDoc(doc(db, "eventProgram", docIdValue), activityData);
-                        } else {
-                            await addDoc(programCollectionRef, activityData);
-                        }
-                    } catch (error) {
-                        console.error("Erro ao salvar atividade: ", error);
-                    }
+                        if (docIdValue) await updateDoc(doc(db, programCollectionRef, docIdValue), activityData);
+                        else await addDoc(programCollectionRef, activityData);
+                    } catch (error) { console.error("Erro ao salvar atividade: ", error); }
                 }
-
                 await refreshAdminProgramDataAndTable();
                 clearActivityForm();
                 saveActivityBtn.disabled = false;
@@ -734,7 +758,6 @@
                 autoAdjustCheckbox.checked = false;
                 activityTimeInput.focus();
             }
-
             clearActivityFormBtn.addEventListener('click', clearActivityForm);
 
             adminProgramBody.addEventListener('click', async (e) => {
@@ -742,7 +765,6 @@
                 if (!targetButton) return;
                 const docIdValue = targetButton.dataset.id;
                 const item = program.find(item => item.id === docIdValue);
-
                 if (targetButton.classList.contains('edit-btn')) {
                     activityTimeInput.value = item.time;
                     activityDurationInput.value = item.duration || '';
@@ -754,7 +776,7 @@
                     activityTimeInput.focus();
                 } else if (targetButton.classList.contains('delete-btn')) {
                     if (confirm(`Tem certeza que deseja excluir "${item.activity}"?`)) {
-                        await deleteDoc(doc(db, "eventProgram", docIdValue));
+                        await deleteDoc(doc(db, programCollectionRef, docIdValue));
                         await refreshAdminProgramDataAndTable();
                     }
                 }
@@ -777,12 +799,10 @@
             function renderAdminProgram() {
                 adminProgramBody.innerHTML = '';
                 if (program.length === 0 && !loadingIndicator.classList.contains('active')) {
-                    adminProgramBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>';
+                    adminProgramBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>`;
                     return;
                 }
-
                 const sortedProgram = [...program].sort((a, b) => a.time.localeCompare(b.time));
-
                 sortedProgram.forEach(item => {
                     const locationName = locations.find(loc => loc.id === item.locationId)?.name || 'N/D';
                     const row = document.createElement('tr');
@@ -808,17 +828,10 @@
                 renderLocations();
             }
 
-            async function initializeAdminPage() {
-                await loadSiteConfig();
-                await refreshLocationsDataAndUI();
-                await refreshAdminProgramDataAndTable();
-
-                setInterval(refreshAdminProgramDataAndTable, 10000);
-                setInterval(refreshLocationsDataAndUI, 10000);
-            }
-
-            initializeAdminPage();
-        });
+            loadSiteConfig();
+            refreshLocationsDataAndUI();
+            refreshAdminProgramDataAndTable();
+        }
     </script>
 </body>
 

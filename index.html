@@ -374,7 +374,6 @@
         const timeValueDisplay = document.getElementById('time-value');
         const nowNextDisplayContainer = document.getElementById('now-next-display');
         const programBody = document.getElementById('program-body');
-
         const favicon = document.getElementById('favicon');
 
         const timeToMinutes = (timeString) => {
@@ -394,10 +393,8 @@
                 if (configDoc.exists()) {
                     const configData = configDoc.data();
                     const newTitle = configData.pageTitle || "Programação do Evento";
-
                     pageTitleElement.textContent = newTitle;
                     document.title = newTitle;
-
                     if (configData.logoBase64) {
                         headerLogo.src = configData.logoBase64;
                         favicon.href = configData.logoBase64;
@@ -422,24 +419,18 @@
         function getEventStatus(now) {
             const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
             const scheduleWithStatus = state.program.map(item => ({ ...item, status: 'past' }));
-
             let nowTime = null;
             let nextTime = null;
-
             const sortedProgram = [...state.program].sort((a, b) => a.time.localeCompare(b.time));
 
             for (const item of sortedProgram) {
                 const startTime = timeToMinutes(item.time);
                 const endTime = startTime + (item.duration || 60);
-
                 if (currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime) {
                     nowTime = item.time;
                 }
-
-                if (startTime > currentTimeInMinutes) {
-                    if (!nextTime) {
-                        nextTime = item.time;
-                    }
+                if (startTime > currentTimeInMinutes && !nextTime) {
+                    nextTime = item.time;
                 }
             }
 
@@ -448,30 +439,45 @@
                 else if (item.time === nextTime) item.status = 'next';
             });
 
-            return { schedule: scheduleWithStatus, eventStatus: { now: nowTime, next: nextTime } };
+            return { schedule: scheduleWithStatus };
         }
 
-        function renderNowNextCards({ schedule }) {
+        function renderNowNextCards(now) {
             nowNextDisplayContainer.innerHTML = '';
-            if (!state.locations) return;
+            if (!state.locations || state.locations.length === 0) return;
 
-            const fragment = new DocumentFragment();
+            const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+            const fragment = document.createDocumentFragment();
+
             state.locations.forEach(loc => {
-                const currentEvent = schedule.find(p => p.locationId === loc.id && p.status === 'now');
-                const nextEvent = schedule.find(p => p.locationId === loc.id && p.status === 'next');
+                const eventsForLocation = state.program.filter(p => p.locationId === loc.id);
 
-                if (!currentEvent && !nextEvent) return;
+                const currentEvent = eventsForLocation.find(event => {
+                    const startTime = timeToMinutes(event.time);
+                    const endTime = startTime + (event.duration || 60);
+                    return currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
+                });
+
+                const nextEvent = eventsForLocation
+                    .filter(event => timeToMinutes(event.time) > currentTimeInMinutes)
+                    .sort((a, b) => a.time.localeCompare(b.time))[0];
+
+                if (!currentEvent && !nextEvent) {
+                    return;
+                }
 
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'now-next-group panel';
 
                 const createCard = (event, type) => {
                     if (!event) {
-                        return `<div class="card no-activity"><p>Nenhuma atividade</p></div>`;
+                        return `<div class="card no-activity"><p>Nenhuma atividade agendada</p></div>`;
                     }
+                    const cardClass = type === 'now' ? 'current-activity' : 'next-activity';
                     const countdownHtml = type === 'next' ? `<p class="countdown" data-starttime="${event.time}"></p>` : '';
+
                     return `
-                        <div class="card ${type === 'now' ? 'current-activity' : 'next-activity'}">
+                        <div class="card ${cardClass}">
                             <p class="time-slot">${event.time}</p>
                             <p class="activity-name">${event.activity}</p>
                             ${countdownHtml}
@@ -491,7 +497,7 @@
             nowNextDisplayContainer.appendChild(fragment);
         }
 
-        function renderProgramTable({ schedule, eventStatus }) {
+        function renderProgramTable({ schedule }) {
             programBody.innerHTML = '';
             if (!state.program || state.program.length === 0) {
                 programBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhuma programação disponível.</td></tr>';
@@ -499,8 +505,8 @@
             }
 
             const sortedSchedule = [...schedule].sort((a, b) => a.time.localeCompare(b.time));
-
             const fragment = new DocumentFragment();
+
             sortedSchedule.forEach(item => {
                 const locationName = state.locations.find(loc => loc.id === item.locationId)?.name || 'N/A';
                 const row = document.createElement('tr');
@@ -523,7 +529,6 @@
                 const [hours, minutes] = startTime.split(':').map(Number);
                 const now = new Date();
                 const eventTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
-
                 const diffInSeconds = Math.floor((eventTime - now) / 1000);
 
                 if (diffInSeconds > 0) {
@@ -532,8 +537,7 @@
                     const h = Math.floor(diffInSeconds / 3600);
                     element.textContent = `Começa em: ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
                 } else {
-                    element.textContent = diffInSeconds > -60 ? "Começando..." : "Evento iniciado";
-                    element.style.opacity = "0.7";
+                    element.textContent = "Começando...";
                 }
             });
         }
@@ -547,18 +551,16 @@
                 state.lastUpdatedMinute = currentMinute;
 
                 if (state.program.length > 0) {
-                    const processedData = getEventStatus(now);
-                    renderNowNextCards(processedData);
-                    renderProgramTable(processedData);
+                    const processedDataForTable = getEventStatus(now);
+                    renderProgramTable(processedDataForTable);
+                    renderNowNextCards(now);
                 }
             }
-
             updateAllCountdowns();
         }
 
         async function initialize() {
             await fetchData();
-
             setInterval(updateDisplay, 1000);
             setInterval(fetchData, 10000);
         }

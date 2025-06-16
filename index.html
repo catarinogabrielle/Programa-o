@@ -471,7 +471,7 @@
 
                 const createCard = (event, type) => {
                     if (!event) {
-                        return `<div class="card no-activity"><p>Nenhuma atividade agendada</p></div>`;
+                        return `<div class="card no-activity"><p>Nenhuma atividade no momento</p></div>`;
                     }
                     const cardClass = type === 'now' ? 'current-activity' : 'next-activity';
                     const countdownHtml = type === 'next' ? `<p class="countdown" data-starttime="${event.time}"></p>` : '';

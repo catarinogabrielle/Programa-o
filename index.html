@@ -449,33 +449,52 @@
             const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
             const fragment = document.createDocumentFragment();
 
+            const locationsWithEventData = [];
             state.locations.forEach(loc => {
                 const eventsForLocation = state.program.filter(p => p.locationId === loc.id);
-
                 const currentEvent = eventsForLocation.find(event => {
                     const startTime = timeToMinutes(event.time);
                     const endTime = startTime + (event.duration || 60);
                     return currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
                 });
-
                 const nextEvent = eventsForLocation
                     .filter(event => timeToMinutes(event.time) > currentTimeInMinutes)
                     .sort((a, b) => a.time.localeCompare(b.time))[0];
 
-                if (!currentEvent && !nextEvent) {
-                    return;
+                if (currentEvent || nextEvent) {
+                    locationsWithEventData.push({
+                        location: loc,
+                        currentEvent: currentEvent || null,
+                        nextEvent: nextEvent || null
+                    });
                 }
+            });
+
+            locationsWithEventData.sort((a, b) => {
+                if (a.currentEvent && !b.currentEvent) return -1;
+                if (!a.currentEvent && b.currentEvent) return 1;
+
+                const aNextTime = a.nextEvent ? timeToMinutes(a.nextEvent.time) : Infinity;
+                const bNextTime = b.nextEvent ? timeToMinutes(b.nextEvent.time) : Infinity;
+
+                if (aNextTime < bNextTime) return -1;
+                if (aNextTime > bNextTime) return 1;
+
+                return a.location.name.localeCompare(b.location.name);
+            });
+
+            locationsWithEventData.forEach(data => {
+                const { location, currentEvent, nextEvent } = data;
 
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'now-next-group panel';
 
                 const createCard = (event, type) => {
                     if (!event) {
-                        return `<div class="card no-activity"><p>Nenhuma atividade no momento</p></div>`;
+                        return `<div class="card no-activity"><p>Nenhuma atividade agendada</p></div>`;
                     }
                     const cardClass = type === 'now' ? 'current-activity' : 'next-activity';
                     const countdownHtml = type === 'next' ? `<p class="countdown" data-starttime="${event.time}"></p>` : '';
-
                     return `
                         <div class="card ${cardClass}">
                             <p class="time-slot">${event.time}</p>
@@ -485,7 +504,7 @@
                 };
 
                 groupDiv.innerHTML = `
-                    <div class="group-title">${loc.name}</div>
+                    <div class="group-title">${location.name}</div>
                     <div class="cards-container">
                         ${createCard(currentEvent, 'now')}
                         ${createCard(nextEvent, 'next')}

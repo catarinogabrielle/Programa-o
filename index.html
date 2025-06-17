@@ -475,17 +475,22 @@
         }
 
         function renderDaySelectors() {
-            daySelectorContainer.innerHTML = '';
-            const fragment = document.createDocumentFragment();
-            state.days.forEach(day => {
-                const button = document.createElement('button');
-                button.className = 'day-selector-btn';
-                button.textContent = day.name;
-                button.dataset.dayId = day.id;
-                if (day.id === state.selectedDayId) button.classList.add('active');
-                fragment.appendChild(button);
-            });
-            daySelectorContainer.appendChild(fragment);
+            if (state.days.length > 1) {
+                daySelectorContainer.style.display = 'flex';
+                daySelectorContainer.innerHTML = '';
+                const fragment = document.createDocumentFragment();
+                state.days.forEach(day => {
+                    const button = document.createElement('button');
+                    button.className = 'day-selector-btn';
+                    button.textContent = day.name;
+                    button.dataset.dayId = day.id;
+                    if (day.id === state.selectedDayId) button.classList.add('active');
+                    fragment.appendChild(button);
+                });
+                daySelectorContainer.appendChild(fragment);
+            } else {
+                daySelectorContainer.style.display = 'none';
+            }
         }
 
         daySelectorContainer.addEventListener('click', (e) => {

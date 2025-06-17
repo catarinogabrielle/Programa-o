@@ -96,6 +96,7 @@
             color: var(--text-secondary);
         }
 
+        .form-group input[type="date"],
         .form-group input[type="time"],
         .form-group input[type="text"],
         .form-group input[type="number"],
@@ -170,24 +171,28 @@
 
         #saveConfigBtn,
         #saveLocationBtn,
+        #saveDayBtn,
         #saveActivityBtn {
             background-color: var(--accent-green);
         }
 
         #clearLocationFormBtn,
+        #clearDayFormBtn,
         #clearActivityFormBtn {
             background-color: var(--neutral-gray);
             color: var(--text-primary);
         }
 
         .action-buttons button.edit-btn,
-        .action-buttons button.edit-location-btn {
+        .action-buttons button.edit-location-btn,
+        .action-buttons button.edit-day-btn {
             background-color: var(--accent-yellow);
             color: #1c1c1c;
         }
 
         .action-buttons button.delete-btn,
-        .action-buttons button.delete-location-btn {
+        .action-buttons button.delete-location-btn,
+        .action-buttons button.delete-day-btn {
             background-color: var(--accent-red);
         }
 
@@ -253,7 +258,8 @@
             border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
         }
 
-        #locationListBody td:nth-child(2) {
+        #locationListBody td:nth-child(2),
+        #dayListBody td:nth-child(3) {
             width: 1%;
         }
 
@@ -337,7 +343,7 @@
     </style>
 </head>
 
-<body class="dark-mode">
+<body>
     <div id="loader">
         <h2 style="text-align: center; padding-top: 50px;">Verificando autenticação...</h2>
     </div>
@@ -380,6 +386,37 @@
             </div>
 
             <div class="form-section">
+                <h2>Gerenciar Dias do Evento</h2>
+                <form id="dayForm">
+                    <input type="hidden" id="dayDocId">
+                    <div class="form-group">
+                        <label for="dayName">Nome do Dia (Ex: Dia 1, Sexta-feira):</label>
+                        <input type="text" id="dayName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dayDate">Data do Dia:</label>
+                        <input type="date" id="dayDate" required>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" id="saveDayBtn">Adicionar Dia</button>
+                        <button type="button" id="clearDayFormBtn">Limpar</button>
+                    </div>
+                </form>
+                <div class="table-responsive-wrapper" style="margin-top: 20px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome do Dia</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dayListBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-section">
                 <h2>Gerenciar Locais</h2>
                 <form id="locationForm">
                     <input type="hidden" id="locationDocId">
@@ -409,6 +446,14 @@
                 <h2>Adicionar/Editar Atividade</h2>
                 <form id="activityForm">
                     <input type="hidden" id="activityDocId">
+
+                    <div class="form-group">
+                        <label for="activityDaySelect">Dia do Evento:</label>
+                        <select id="activityDaySelect" required>
+                            <option value="">Primeiro, cadastre e selecione um dia</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label for="activityTime">Horário de Início:</label>
                         <input type="time" id="activityTime" required>
@@ -429,7 +474,7 @@
                     </div>
                     <div class="form-group-checkbox" id="autoAdjustContainer">
                         <input type="checkbox" id="autoAdjustCheckbox">
-                        <label for="autoAdjustCheckbox">Reajustar horários subsequentes</label>
+                        <label for="autoAdjustCheckbox">Reajustar horários subsequentes neste dia</label>
                     </div>
                     <div class="form-buttons">
                         <button type="submit" id="saveActivityBtn">Adicionar Atividade</button>
@@ -440,6 +485,14 @@
 
             <div class="program-table-section">
                 <h2>Programação Atual</h2>
+
+                <div class="form-group">
+                    <label for="dayFilterSelect">Visualizar programação do dia:</label>
+                    <select id="dayFilterSelect">
+                        <option value="">Nenhum dia cadastrado</option>
+                    </select>
+                </div>
+
                 <div class="loading-indicator" id="loadingIndicator">Carregando programação...</div>
                 <div class="table-responsive-wrapper">
                     <table>
@@ -460,7 +513,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc, writeBatch, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -484,7 +537,6 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUserId = user.uid;
-
                 loader.style.display = 'none';
                 mainContent.style.display = 'block';
                 runAdminLogic();
@@ -494,22 +546,27 @@
         });
 
         function runAdminLogic() {
+            const daysCollectionRef = collection(db, 'user_data', currentUserId, 'eventDays');
             const programCollectionRef = collection(db, 'user_data', currentUserId, 'eventProgram');
             const locationsCollectionRef = collection(db, 'user_data', currentUserId, 'eventLocations');
             const siteConfigRef = doc(db, 'user_data', currentUserId, 'site_config', 'main_settings');
 
+            const logoutBtn = document.getElementById('logoutBtn');
             const eventUrlInput = document.getElementById('eventUrlInput');
             const copyUrlBtn = document.getElementById('copyUrlBtn');
             const copyUrlFeedback = document.getElementById('copyUrlFeedback');
-
-            const logoutBtn = document.getElementById('logoutBtn');
-            const adminProgramBody = document.getElementById('adminProgramBody');
-            const loadingIndicator = document.getElementById('loadingIndicator');
             const siteConfigForm = document.getElementById('siteConfigForm');
             const pageTitleInput = document.getElementById('pageTitleInput');
             const logoUploadInput = document.getElementById('logoUploadInput');
             const logoPreview = document.getElementById('logoPreview');
             const saveConfigBtn = document.getElementById('saveConfigBtn');
+            const dayForm = document.getElementById('dayForm');
+            const dayDocIdInput = document.getElementById('dayDocId');
+            const dayNameInput = document.getElementById('dayName');
+            const dayDateInput = document.getElementById('dayDate');
+            const saveDayBtn = document.getElementById('saveDayBtn');
+            const clearDayFormBtn = document.getElementById('clearDayFormBtn');
+            const dayListBody = document.getElementById('dayListBody');
             const locationForm = document.getElementById('locationForm');
             const locationDocIdInput = document.getElementById('locationDocId');
             const locationNameInput = document.getElementById('locationName');
@@ -518,6 +575,7 @@
             const locationListBody = document.getElementById('locationListBody');
             const activityForm = document.getElementById('activityForm');
             const activityDocIdInput = document.getElementById('activityDocId');
+            const activityDaySelect = document.getElementById('activityDaySelect');
             const activityTimeInput = document.getElementById('activityTime');
             const activityDurationInput = document.getElementById('activityDuration');
             const autoAdjustContainer = document.getElementById('autoAdjustContainer');
@@ -526,15 +584,19 @@
             const activityLocationSelect = document.getElementById('activityLocationSelect');
             const saveActivityBtn = document.getElementById('saveActivityBtn');
             const clearActivityFormBtn = document.getElementById('clearActivityFormBtn');
+            const dayFilterSelect = document.getElementById('dayFilterSelect');
+            const adminProgramBody = document.getElementById('adminProgramBody');
+            const loadingIndicator = document.getElementById('loadingIndicator');
 
             let program = [];
             let locations = [];
+            let days = [];
+            let selectedDayId = null;
 
-            //const baseURL = `${window.location.origin}/index.html`;
+            logoutBtn.addEventListener('click', () => signOut(auth).catch(error => console.error("Erro no logout:", error)));
             const baseURL = 'https://pgmt.tec.br/';
             const eventURL = `${baseURL}?evento=${currentUserId}`;
             eventUrlInput.value = eventURL;
-
             copyUrlBtn.addEventListener('click', () => {
                 navigator.clipboard.writeText(eventUrlInput.value).then(() => {
                     copyUrlFeedback.style.display = 'inline';
@@ -543,14 +605,7 @@
                         copyUrlFeedback.style.display = 'none';
                         copyUrlBtn.textContent = 'Copiar URL';
                     }, 2500);
-                }).catch(err => {
-                    console.error('Falha ao copiar a URL: ', err);
-                    alert('Não foi possível copiar a URL.');
-                });
-            });
-
-            logoutBtn.addEventListener('click', () => {
-                signOut(auth).catch(error => console.error("Erro no logout:", error));
+                }).catch(err => console.error('Falha ao copiar a URL: ', err));
             });
 
             async function loadSiteConfig() {
@@ -582,7 +637,6 @@
             siteConfigForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 saveConfigBtn.disabled = true;
-                saveConfigBtn.textContent = 'Salvando...';
                 const newTitle = pageTitleInput.value.trim();
                 const file = logoUploadInput.files[0];
                 const configToSave = { pageTitle: newTitle };
@@ -600,71 +654,126 @@
                     alert('Configurações salvas com sucesso!');
                 } catch (error) {
                     console.error("Erro ao salvar configurações:", error);
-                    alert('Ocorreu um erro ao salvar as configurações.');
                 } finally {
                     saveConfigBtn.disabled = false;
-                    saveConfigBtn.textContent = 'Salvar Configurações';
+                }
+            });
+
+            async function loadDays() {
+                try {
+                    const q = query(daysCollectionRef, orderBy("date"));
+                    const snapshot = await getDocs(q);
+                    days = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                } catch (error) { console.error("Erro ao carregar dias:", error); days = []; }
+            }
+
+            function renderDays() {
+                dayListBody.innerHTML = '';
+                if (days.length === 0) { dayListBody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Nenhum dia cadastrado.</td></tr>`; return; }
+                days.forEach(day => {
+                    const row = document.createElement('tr');
+                    const formattedDate = new Date(day.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                    row.innerHTML = `<td>${day.name}</td><td>${formattedDate}</td><td class="action-buttons"><button class="edit-day-btn" data-id="${day.id}">Editar</button><button class="delete-day-btn" data-id="${day.id}">Excluir</button></td>`;
+                    dayListBody.appendChild(row);
+                });
+            }
+
+            function populateDaySelects() {
+                const hasDays = days.length > 0;
+                activityDaySelect.innerHTML = hasDays ? '' : '<option value="">Primeiro, cadastre um dia</option>';
+                dayFilterSelect.innerHTML = hasDays ? '' : '<option value="">Nenhum dia cadastrado</option>';
+                days.forEach(day => {
+                    activityDaySelect.add(new Option(day.name, day.id));
+                    dayFilterSelect.add(new Option(day.name, day.id));
+                });
+                if (hasDays && (!selectedDayId || !days.some(d => d.id === selectedDayId))) {
+                    selectedDayId = days[0].id;
+                }
+                dayFilterSelect.value = selectedDayId;
+                activityDaySelect.value = selectedDayId;
+            }
+
+            function clearDayForm() {
+                dayForm.reset();
+                dayDocIdInput.value = '';
+                saveDayBtn.textContent = 'Adicionar Dia';
+                dayNameInput.focus();
+            }
+            clearDayFormBtn.addEventListener('click', clearDayForm);
+
+            dayForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveDayBtn.disabled = true;
+                saveDayBtn.textContent = 'Salvando...';
+                const dayData = { name: dayNameInput.value.trim(), date: dayDateInput.value };
+                const docId = dayDocIdInput.value;
+                try {
+                    if (docId) {
+                        const dayDocRef = doc(daysCollectionRef, docId);
+                        await updateDoc(dayDocRef, dayData);
+                    } else {
+                        const newDocRef = await addDoc(daysCollectionRef, dayData);
+                        selectedDayId = newDocRef.id;
+                    }
+                    await loadDays();
+                    renderDays();
+                    populateDaySelects();
+                    clearDayForm();
+                } catch (error) {
+                    console.error("Erro ao salvar dia:", error);
+                    alert("Ocorreu um erro ao salvar o dia.");
+                } finally {
+                    saveDayBtn.disabled = false;
+                    saveDayBtn.textContent = dayDocIdInput.value ? 'Salvar Edição' : 'Adicionar Dia';
+                }
+            });
+
+            dayListBody.addEventListener('click', async (e) => {
+                const target = e.target.closest('button');
+                if (!target) return;
+                const docId = target.dataset.id;
+                const day = days.find(d => d.id === docId);
+
+                if (target.classList.contains('edit-day-btn')) {
+                    dayDocIdInput.value = day.id;
+                    dayNameInput.value = day.name;
+                    dayDateInput.value = day.date;
+                    saveDayBtn.textContent = 'Salvar Edição';
+                    dayNameInput.focus();
+                } else if (target.classList.contains('delete-day-btn')) {
+                    if (confirm(`Tem certeza que deseja excluir o "${day.name}"? ISSO REMOVERÁ TODAS AS ATIVIDADES DESTE DIA.`)) {
+                        const activitiesToDeleteQuery = query(programCollectionRef, where("dayId", "==", docId));
+                        const activitiesSnapshot = await getDocs(activitiesToDeleteQuery);
+                        const batch = writeBatch(db);
+                        activitiesSnapshot.forEach(docToDelete => batch.delete(docToDelete.ref));
+                        batch.delete(doc(daysCollectionRef, docId));
+                        await batch.commit();
+                        selectedDayId = null;
+                        await initializePage();
+                    }
                 }
             });
 
             async function loadLocationsFromFirestore() {
                 try {
                     const q = query(locationsCollectionRef, orderBy("name"));
-                    const querySnapshot = await getDocs(q);
-                    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                } catch (error) {
-                    console.error("Erro ao carregar locais:", error);
-                    return [];
-                }
+                    locations = (await getDocs(q)).docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                } catch (error) { console.error("Erro ao carregar locais:", error); locations = []; }
             }
 
             function renderLocations() {
                 locationListBody.innerHTML = '';
                 activityLocationSelect.innerHTML = '<option value="">Selecione um local</option>';
-                if (locations.length === 0) {
-                    locationListBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">Nenhum local cadastrado.</td></tr>`;
-                    return;
+                if (locations.length === 0) { locationListBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">Nenhum local cadastrado.</td></tr>`; }
+                else {
+                    locations.forEach(loc => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td>${loc.name}</td><td class="action-buttons"><button class="edit-location-btn" data-id="${loc.id}">Editar</button><button class="delete-location-btn" data-id="${loc.id}">Excluir</button></td>`;
+                        locationListBody.appendChild(row);
+                        activityLocationSelect.add(new Option(loc.name, loc.id));
+                    });
                 }
-                locations.forEach(loc => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${loc.name}</td>
-                        <td class="action-buttons">
-                            <button class="edit-location-btn" data-id="${loc.id}">Editar</button>
-                            <button class="delete-location-btn" data-id="${loc.id}">Excluir</button>
-                        </td>`;
-                    locationListBody.appendChild(row);
-                    const option = document.createElement('option');
-                    option.value = loc.id;
-                    option.textContent = loc.name;
-                    activityLocationSelect.appendChild(option);
-                });
             }
-
-            locationForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                saveLocationBtn.disabled = true;
-                saveLocationBtn.textContent = 'Salvando...';
-                const name = locationNameInput.value.trim();
-                const docIdValue = locationDocIdInput.value;
-                if (!name) {
-                    alert("Por favor, preencha o nome do local!");
-                    saveLocationBtn.disabled = false;
-                    saveLocationBtn.textContent = 'Adicionar Local';
-                    return;
-                }
-                try {
-                    if (docIdValue) await updateDoc(doc(db, locationsCollectionRef, docIdValue), { name });
-                    else await addDoc(locationsCollectionRef, { name });
-                    await refreshLocationsDataAndUI();
-                    clearLocationForm();
-                } catch (error) {
-                    console.error("Erro ao salvar local:", error);
-                } finally {
-                    saveLocationBtn.disabled = false;
-                    saveLocationBtn.textContent = locationDocIdInput.value ? 'Salvar Edição' : 'Adicionar Local';
-                }
-            });
 
             function clearLocationForm() {
                 locationForm.reset();
@@ -673,6 +782,26 @@
                 locationNameInput.focus();
             }
             clearLocationFormBtn.addEventListener('click', clearLocationForm);
+
+            locationForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveLocationBtn.disabled = true;
+                saveLocationBtn.textContent = 'Salvando...';
+                const name = locationNameInput.value.trim();
+                const docId = locationDocIdInput.value;
+                try {
+                    if (docId) await updateDoc(doc(locationsCollectionRef, docId), { name });
+                    else await addDoc(locationsCollectionRef, { name });
+                    await loadLocationsFromFirestore();
+                    renderLocations();
+                    clearLocationForm();
+                } catch (error) {
+                    console.error("Erro ao salvar local:", error);
+                } finally {
+                    saveLocationBtn.disabled = false;
+                    saveLocationBtn.textContent = locationDocIdInput.value ? 'Salvar Edição' : 'Adicionar Local';
+                }
+            });
 
             locationListBody.addEventListener('click', async (e) => {
                 const target = e.target.closest('button');
@@ -687,67 +816,18 @@
                 } else if (target.classList.contains('delete-location-btn')) {
                     if (confirm(`Tem certeza que deseja excluir o local "${location.name}"?`)) {
                         try {
-                            await deleteDoc(doc(db, locationsCollectionRef, docId));
-                            await refreshLocationsDataAndUI();
-                            await refreshAdminProgramDataAndTable();
+                            await deleteDoc(doc(locationsCollectionRef, docId));
+                            await loadLocationsFromFirestore();
+                            renderLocations();
                         } catch (error) { console.error("Erro ao excluir local:", error); }
                     }
                 }
             });
 
-            const timeToMinutes = (timeStr) => {
-                const [hours, minutes] = timeStr.split(':').map(Number);
-                return hours * 60 + minutes;
-            };
-            const minutesToTime = (totalMinutes) => {
-                const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
-                const minutes = (totalMinutes % 60).toString().padStart(2, '0');
-                return `${hours}:${minutes}`;
-            };
-
-            activityForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                saveActivityBtn.disabled = true;
-                saveActivityBtn.textContent = 'Salvando...';
-                const activityData = { time: activityTimeInput.value, duration: parseInt(activityDurationInput.value, 10), activity: activityNameInput.value, locationId: activityLocationSelect.value };
-                const docIdValue = activityDocIdInput.value;
-                if (!activityData.time || !activityData.duration || !activityData.activity || !activityData.locationId) {
-                    alert("Por favor, preencha todos os campos da atividade!");
-                    saveActivityBtn.disabled = false;
-                    saveActivityBtn.textContent = 'Adicionar Atividade';
-                    return;
-                }
-                if (docIdValue && autoAdjustCheckbox.checked) {
-                    try {
-                        const batch = writeBatch(db);
-                        const sortedProgram = [...program].sort((a, b) => a.time.localeCompare(b.time));
-                        const editedItemIndex = sortedProgram.findIndex(item => item.id === docIdValue);
-                        if (editedItemIndex === -1) throw new Error("Item editado não foi encontrado.");
-                        const editedDocRef = doc(db, programCollectionRef, docIdValue);
-                        batch.update(editedDocRef, activityData);
-                        let lastEndTimeInMinutes = timeToMinutes(activityData.time) + activityData.duration;
-                        for (let i = editedItemIndex + 1; i < sortedProgram.length; i++) {
-                            const currentItem = sortedProgram[i];
-                            const newStartTime = minutesToTime(lastEndTimeInMinutes);
-                            batch.update(doc(db, programCollectionRef, currentItem.id), { time: newStartTime });
-                            lastEndTimeInMinutes += currentItem.duration;
-                        }
-                        await batch.commit();
-                        alert('Programação reajustada com sucesso!');
-                    } catch (error) {
-                        console.error("Erro no reajuste automático: ", error);
-                        alert("Ocorreu um erro ao reajustar os horários.");
-                    }
-                } else {
-                    try {
-                        if (docIdValue) await updateDoc(doc(db, programCollectionRef, docIdValue), activityData);
-                        else await addDoc(programCollectionRef, activityData);
-                    } catch (error) { console.error("Erro ao salvar atividade: ", error); }
-                }
-                await refreshAdminProgramDataAndTable();
-                clearActivityForm();
-                saveActivityBtn.disabled = false;
-                saveActivityBtn.textContent = 'Adicionar Atividade';
+            dayFilterSelect.addEventListener('change', (e) => {
+                selectedDayId = e.target.value;
+                activityDaySelect.value = selectedDayId;
+                refreshAdminProgramDataAndTable();
             });
 
             function clearActivityForm() {
@@ -756,41 +836,71 @@
                 saveActivityBtn.textContent = 'Adicionar Atividade';
                 autoAdjustContainer.style.display = 'none';
                 autoAdjustCheckbox.checked = false;
-                activityTimeInput.focus();
+                if (selectedDayId) {
+                    activityDaySelect.value = selectedDayId;
+                }
+                activityDaySelect.focus();
             }
             clearActivityFormBtn.addEventListener('click', clearActivityForm);
+
+            activityForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!activityDaySelect.value) { alert("Por favor, selecione um dia para a atividade."); return; }
+                saveActivityBtn.disabled = true;
+                saveActivityBtn.textContent = 'Salvando...';
+                const activityData = {
+                    dayId: activityDaySelect.value, time: activityTimeInput.value,
+                    duration: parseInt(activityDurationInput.value, 10),
+                    activity: activityNameInput.value.trim(), locationId: activityLocationSelect.value
+                };
+                const docIdValue = activityDocIdInput.value;
+                try {
+                    if (docIdValue) await updateDoc(doc(programCollectionRef, docIdValue), activityData);
+                    else await addDoc(programCollectionRef, activityData);
+                    await refreshAdminProgramDataAndTable();
+                    clearActivityForm();
+                } catch (error) {
+                    console.error("Erro ao salvar atividade:", error);
+                } finally {
+                    saveActivityBtn.disabled = false;
+                    saveActivityBtn.textContent = activityDocIdInput.value ? 'Salvar Edição' : 'Adicionar Atividade';
+                }
+            });
 
             adminProgramBody.addEventListener('click', async (e) => {
                 const targetButton = e.target.closest('button');
                 if (!targetButton) return;
-                const docIdValue = targetButton.dataset.id;
-                const item = program.find(item => item.id === docIdValue);
+                const docId = targetButton.dataset.id;
+                const item = program.find(p => p.id === docId);
                 if (targetButton.classList.contains('edit-btn')) {
+                    activityDocIdInput.value = item.id;
+                    activityDaySelect.value = item.dayId;
                     activityTimeInput.value = item.time;
                     activityDurationInput.value = item.duration || '';
                     activityNameInput.value = item.activity;
                     activityLocationSelect.value = item.locationId;
-                    activityDocIdInput.value = docIdValue;
                     saveActivityBtn.textContent = 'Salvar Edição';
                     autoAdjustContainer.style.display = 'flex';
-                    activityTimeInput.focus();
+                    activityDaySelect.focus();
                 } else if (targetButton.classList.contains('delete-btn')) {
-                    if (confirm(`Tem certeza que deseja excluir "${item.activity}"?`)) {
-                        await deleteDoc(doc(db, programCollectionRef, docIdValue));
+                    if (confirm(`Tem certeza que deseja excluir esta atividade?`)) {
+                        await deleteDoc(doc(programCollectionRef, docId));
                         await refreshAdminProgramDataAndTable();
                     }
                 }
             });
 
-            async function loadProgramFromFirestore() {
+            async function loadProgramFromFirestore(dayId) {
                 loadingIndicator.classList.add('active');
+                adminProgramBody.innerHTML = '';
                 try {
-                    const q = query(programCollectionRef);
-                    const querySnapshot = await getDocs(q);
-                    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    if (!dayId) { program = []; return; }
+                    const q = query(programCollectionRef, where("dayId", "==", dayId), orderBy("time"));
+                    const snapshot = await getDocs(q);
+                    program = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 } catch (error) {
-                    console.error("Erro ao carregar programação: ", error);
-                    return [];
+                    console.error("ERRO CRÍTICO AO BUSCAR PROGRAMAÇÃO:", error);
+                    program = [];
                 } finally {
                     loadingIndicator.classList.remove('active');
                 }
@@ -798,39 +908,32 @@
 
             function renderAdminProgram() {
                 adminProgramBody.innerHTML = '';
-                if (program.length === 0 && !loadingIndicator.classList.contains('active')) {
-                    adminProgramBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada.</td></tr>`;
-                    return;
-                }
-                const sortedProgram = [...program].sort((a, b) => a.time.localeCompare(b.time));
-                sortedProgram.forEach(item => {
+                if (!selectedDayId) { adminProgramBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Cadastre e/ou selecione um dia para ver a programação.</td></tr>`; return; }
+                if (program.length === 0) { adminProgramBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Nenhuma atividade programada para este dia.</td></tr>`; return; }
+                program.forEach(item => {
                     const locationName = locations.find(loc => loc.id === item.locationId)?.name || 'N/D';
                     const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${item.time}</td>
-                        <td>${item.activity}</td>
-                        <td>${locationName}</td>
-                        <td class="action-buttons">
-                            <button class="edit-btn" data-id="${item.id}">Editar</button>
-                            <button class="delete-btn" data-id="${item.id}">Excluir</button>
-                        </td>`;
+                    row.innerHTML = `<td>${item.time}</td><td>${item.activity}</td><td>${locationName}</td><td class="action-buttons"><button class="edit-btn" data-id="${item.id}">Editar</button><button class="delete-btn" data-id="${item.id}">Excluir</button></td>`;
                     adminProgramBody.appendChild(row);
                 });
             }
 
             async function refreshAdminProgramDataAndTable() {
-                program = await loadProgramFromFirestore();
+                await loadProgramFromFirestore(selectedDayId);
                 renderAdminProgram();
             }
 
-            async function refreshLocationsDataAndUI() {
-                locations = await loadLocationsFromFirestore();
+            async function initializePage() {
+                await loadSiteConfig();
+                await loadLocationsFromFirestore();
+                await loadDays();
                 renderLocations();
+                renderDays();
+                populateDaySelects();
+                await refreshAdminProgramDataAndTable();
             }
 
-            loadSiteConfig();
-            refreshLocationsDataAndUI();
-            refreshAdminProgramDataAndTable();
+            initializePage();
         }
     </script>
 </body>

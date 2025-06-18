@@ -425,6 +425,13 @@
             return hours * 60 + minutes;
         };
 
+        const minutesToTime = (totalMinutes) => {
+            if (isNaN(totalMinutes) || totalMinutes < 0) return "--:--";
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        };
+
         function rerenderUI() {
             if (isFirstLoad && state.days.length > 0) {
                 determineInitialDay();
@@ -521,7 +528,10 @@
             const sortedProgram = [...schedule].sort((a, b) => a.time.localeCompare(b.time));
             for (const item of sortedProgram) {
                 const startTime = timeToMinutes(item.time);
-                const endTime = startTime + (item.duration || 60);
+                // Assume duração padrão de 60 minutos se não estiver definida
+                const duration = item.duration || 60;
+                const endTime = startTime + duration;
+
                 if (currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime) nowTime = item.time;
                 if (startTime > currentTimeInMinutes && !nextTime) nextTime = item.time;
             }
@@ -550,7 +560,8 @@
                 const eventsForLocation = programByLocation[locationId];
                 const currentEvent = eventsForLocation.find(event => {
                     const startTime = timeToMinutes(event.time);
-                    const endTime = startTime + (event.duration || 60);
+                    const duration = event.duration || 60;
+                    const endTime = startTime + duration;
                     return currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
                 });
                 const nextEvent = eventsForLocation.filter(event => timeToMinutes(event.time) > currentTimeInMinutes).sort((a, b) => a.time.localeCompare(b.time))[0];
@@ -561,8 +572,13 @@
                     const createCard = (event, type) => {
                         if (!event) return `<div class="card no-activity"><p>Nenhuma atividade</p></div>`;
                         const cardClass = type === 'now' ? 'current-activity' : 'next-activity';
+                        // Adiciona o horário de término no time-slot
+                        const startTimeFormatted = event.time;
+                        const endTimeFormatted = minutesToTime(timeToMinutes(event.time) + (event.duration || 60));
+                        const timeDisplay = `${startTimeFormatted} - ${endTimeFormatted}`;
+
                         const countdownHtml = type === 'next' ? `<p class="countdown" data-starttime="${event.time}"></p>` : '';
-                        return `<div class="card ${cardClass}"><p class="time-slot">${event.time}</p><p class="activity-name">${event.activity}</p>${countdownHtml}</div>`;
+                        return `<div class="card ${cardClass}"><p class="time-slot">${timeDisplay}</p><p class="activity-name">${event.activity}</p>${countdownHtml}</div>`;
                     };
                     groupDiv.innerHTML = `<div class="group-title">${locationName}</div><div class="cards-container">${createCard(currentEvent, 'now')}${createCard(nextEvent, 'next')}</div>`;
                     fragment.appendChild(groupDiv);
@@ -585,7 +601,15 @@
                 const row = document.createElement('tr');
                 if (item.status === 'now') row.className = 'active-row';
                 else if (item.status === 'next') row.className = 'upcoming-row';
-                row.innerHTML = `<td>${item.time}</td><td>${item.activity}</td><td>${locationName}</td>`;
+
+                const startTimeInMinutes = timeToMinutes(item.time);
+                const duration = item.duration || 60;
+                const endTimeInMinutes = startTimeInMinutes + duration;
+                const endTimeFormatted = minutesToTime(endTimeInMinutes);
+
+                const timeDisplay = `${item.time} - ${endTimeFormatted}`;
+
+                row.innerHTML = `<td>${timeDisplay}</td><td>${item.activity}</td><td>${locationName}</td>`;
                 fragment.appendChild(row);
             });
             programBody.appendChild(fragment);
@@ -627,12 +651,11 @@
             const todayStr = new Date().toISOString().split('T')[0];
             const isToday = selectedDayData.date === todayStr;
 
-            const programForDisplay = getProgramForSelectedDay();
-
             if (isToday) {
                 currentTimeDisplay.style.display = 'flex';
                 nowNextDisplayContainer.style.display = 'grid';
 
+                const programForDisplay = getProgramForSelectedDay();
                 const processedData = getEventStatus(now, programForDisplay);
                 renderProgramTable(processedData.schedule);
                 renderNowNextCards(now, programForDisplay);
@@ -640,6 +663,7 @@
                 currentTimeDisplay.style.display = 'none';
                 nowNextDisplayContainer.style.display = 'none';
 
+                const programForDisplay = getProgramForSelectedDay();
                 const scheduleWithoutStatus = programForDisplay.map(item => ({ ...item, status: 'none' }));
                 renderProgramTable(scheduleWithoutStatus);
             }

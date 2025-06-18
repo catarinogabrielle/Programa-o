@@ -622,7 +622,7 @@
                 return;
             }
 
-            programTitleElement.textContent = `Programação de ${selectedDayData.name}`;
+            programTitleElement.textContent = `Programação ${selectedDayData.name}`;
 
             const todayStr = new Date().toISOString().split('T')[0];
             const isToday = selectedDayData.date === todayStr;

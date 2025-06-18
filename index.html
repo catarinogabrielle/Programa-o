@@ -244,6 +244,13 @@
             vertical-align: middle;
         }
 
+        #program-list th:nth-child(1),
+        #program-list td:nth-child(1) {
+            width: 130px;
+            min-width: 140px;
+            text-align: center;
+        }
+
         #program-list thead tr {
             background: var(--bg-header);
         }
@@ -333,8 +340,7 @@
 
             #program-list th:nth-child(1),
             #program-list td:nth-child(1) {
-                width: 15%;
-                text-align: center;
+                min-width: 110px;
             }
 
             #program-list th:nth-child(3),
@@ -481,7 +487,6 @@
             }, (error) => console.error("Erro ao ouvir programação: ", error));
         }
 
-
         function determineInitialDay() {
             if (state.days.length === 0) return;
             const todayStr = new Date().toISOString().split('T')[0];
@@ -528,7 +533,6 @@
             const sortedProgram = [...schedule].sort((a, b) => a.time.localeCompare(b.time));
             for (const item of sortedProgram) {
                 const startTime = timeToMinutes(item.time);
-                // Assume duração padrão de 60 minutos se não estiver definida
                 const duration = item.duration || 60;
                 const endTime = startTime + duration;
 
@@ -572,7 +576,6 @@
                     const createCard = (event, type) => {
                         if (!event) return `<div class="card no-activity"><p>Nenhuma atividade</p></div>`;
                         const cardClass = type === 'now' ? 'current-activity' : 'next-activity';
-                        // Adiciona o horário de término no time-slot
                         const startTimeFormatted = event.time;
                         const endTimeFormatted = minutesToTime(timeToMinutes(event.time) + (event.duration || 60));
                         const timeDisplay = `${startTimeFormatted} - ${endTimeFormatted}`;
